@@ -41,6 +41,15 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    label: "Planes",
+    href: "/profesional/planes",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+      </svg>
+    ),
+  },
 ];
 
 interface Props {
@@ -89,11 +98,10 @@ export default function ProfesionalSidebar({ open, onClose }: Props) {
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                active
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${active
                   ? "bg-green/10 text-green"
                   : "text-gray-600 hover:bg-gray-50 hover:text-foreground"
-              }`}
+                }`}
             >
               {item.icon}
               {item.label}
@@ -106,7 +114,7 @@ export default function ProfesionalSidebar({ open, onClose }: Props) {
         <Link
           href="/"
           onClick={onClose}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-foreground transition-colors"
+          className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-foreground transition-colors"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12" />

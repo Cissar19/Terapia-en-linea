@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  getNotesByProfessional,
-  getAppointmentsByProfessional,
-  addClinicalNote,
-} from "@/lib/firebase/firestore";
+import { addClinicalNote } from "@/lib/firebase/firestore";
+import { useProfessionalNotes } from "@/hooks/useNotes";
+import { useProfessionalAppointments } from "@/hooks/useAppointments";
 import type { ClinicalNote, Appointment } from "@/lib/firebase/types";
 
 interface PatientOption {
@@ -14,34 +12,53 @@ interface PatientOption {
   name: string;
 }
 
+const NOTE_TEMPLATES = [
+  {
+    id: "soap",
+    label: "SOAP",
+    icon: "📋",
+    color: "bg-blue/10 text-blue border-blue/20 hover:bg-blue/20",
+    activeColor: "bg-blue/20 ring-2 ring-blue/40",
+    content: `SUBJETIVO\nRelato del paciente/cuidador:\n\n\nOBJETIVO\nObservaciones clínicas:\n\n\nANÁLISIS\nInterpretación y razonamiento clínico:\n\n\nPLAN\nObjetivos y próximos pasos:`,
+  },
+  {
+    id: "alimentacion",
+    label: "Evaluación Alimentación",
+    icon: "🍽️",
+    color: "bg-green/10 text-green border-green/20 hover:bg-green/20",
+    activeColor: "bg-green/20 ring-2 ring-green/40",
+    content: `EVALUACIÓN DE ALIMENTACIÓN\n\nTexturas aceptadas:\n\nTexturas rechazadas:\n\nComportamiento en la mesa:\n\nEstrategias utilizadas:\n\nRecomendaciones para la familia:`,
+  },
+  {
+    id: "sensorial",
+    label: "Integración Sensorial",
+    icon: "🧩",
+    color: "bg-pink/10 text-pink border-pink/20 hover:bg-pink/20",
+    activeColor: "bg-pink/20 ring-2 ring-pink/40",
+    content: `INTEGRACIÓN SENSORIAL\n\nPerfil sensorial observado:\n\nSistemas evaluados:\n- Táctil:\n- Vestibular:\n- Propioceptivo:\n- Visual:\n- Auditivo:\n\nNivel de alerta/regulación:\n\nActividades realizadas:\n\nRespuesta del niño/a:\n\nIndicaciones para el hogar:`,
+  },
+];
+
 export default function NotasProfesionalPage() {
   const { user } = useAuth();
-  const [notes, setNotes] = useState<ClinicalNote[]>([]);
-  const [patients, setPatients] = useState<PatientOption[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: notes, loading: loadingNotes } = useProfessionalNotes(user?.uid);
+  const { data: appointmentsData, loading: loadingAppts } = useProfessionalAppointments(user?.uid);
+  const loading = loadingNotes || loadingAppts;
   const [filterPatient, setFilterPatient] = useState("");
+
+  // Derive unique patients from appointments
+  const patients: PatientOption[] = (() => {
+    const map = new Map<string, string>();
+    appointmentsData.forEach((a: Appointment) => map.set(a.userId, a.userName));
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  })();
 
   // Form
   const [showForm, setShowForm] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState("");
   const [noteContent, setNoteContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    Promise.all([
-      getNotesByProfessional(user.uid),
-      getAppointmentsByProfessional(user.uid),
-    ])
-      .then(([n, appts]) => {
-        setNotes(n);
-        // Derive unique patients from appointments
-        const map = new Map<string, string>();
-        appts.forEach((a: Appointment) => map.set(a.userId, a.userName));
-        setPatients(Array.from(map.entries()).map(([id, name]) => ({ id, name })));
-      })
-      .finally(() => setLoading(false));
-  }, [user]);
+  const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
 
   async function handleSubmit() {
     if (!noteContent.trim() || !selectedPatient || !user) return;
@@ -49,27 +66,16 @@ export default function NotasProfesionalPage() {
     if (!patient) return;
 
     setSubmitting(true);
-    const id = await addClinicalNote({
+    await addClinicalNote({
       appointmentId: "",
       professionalId: user.uid,
       patientId: patient.id,
       patientName: patient.name,
       content: noteContent.trim(),
     });
-    setNotes((prev) => [
-      {
-        id,
-        appointmentId: "",
-        professionalId: user.uid,
-        patientId: patient.id,
-        patientName: patient.name,
-        content: noteContent.trim(),
-        createdAt: { toDate: () => new Date() } as ClinicalNote["createdAt"],
-      },
-      ...prev,
-    ]);
     setNoteContent("");
     setSelectedPatient("");
+    setActiveTemplate(null);
     setShowForm(false);
     setSubmitting(false);
   }
@@ -140,6 +146,46 @@ export default function NotasProfesionalPage() {
                 ))}
               </select>
             </div>
+            {/* Plantillas */}
+            {!noteContent.trim() ? (
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-2">Usar plantilla</label>
+                <div className="flex flex-wrap gap-2">
+                  {NOTE_TEMPLATES.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => {
+                        setNoteContent(t.content);
+                        setActiveTemplate(t.id);
+                      }}
+                      className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${t.color}`}
+                    >
+                      <span>{t.icon}</span>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : activeTemplate && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400">
+                  Plantilla: {NOTE_TEMPLATES.find((t) => t.id === activeTemplate)?.icon}{" "}
+                  {NOTE_TEMPLATES.find((t) => t.id === activeTemplate)?.label}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNoteContent("");
+                    setActiveTemplate(null);
+                  }}
+                  className="text-xs text-gray-400 hover:text-gray-600 underline transition-colors"
+                >
+                  Cambiar plantilla
+                </button>
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1.5">Contenido</label>
               <textarea
