@@ -1,0 +1,36 @@
+// Script to add a test patient appointment for Barbara Ravanal specifically
+import { initializeApp, cert } from "firebase-admin/app";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
+
+const serviceAccountBase64 = "ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAidGVyYXBpYS1vbmxpbmUtMmZjZjEiLAogICJwcml2YXRlX2tleV9pZCI6ICIzNjk1ZDUwZTAwMTA3Y2Q2NjA1OGExMGQ0YjI0YTdkNjYzYmNhMjgxIiwKICAicHJpdmF0ZV9rZXkiOiAiLS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5NSUlFdkFJQkFEQU5CZ2txaGtpRzl3MEJBUUVGQUFTQ0JLWXdnZ1NpQWdFQUFvSUJBUURYZjlSL2daYThGbVA2XG56dnltT1pzWmdjV0lWdHZCNXY5cTJ1VEx0dElTa3hETWJaSDRpdlRaMXFkVEwrUlVKd0JJWms4bEMrRGtQaFAwXG5aOEU1ODFBcDVZc0dBbW1VT3ZST0tPa0tGdlJuT2QzYWUrZk5iWG1HaGI4WklvMTVRTE1ybGdmdUV4ZlhoZU1GXG4xUGliNHFSdHJGUUp1a0swZGNzSTVGM0k4bFJtdVRZcTFFMURIcUJaT2pQNENadTYvWnZsYkNyUmIvaWlXeFN2XG44OXljZHZQRVBVbENxRlJQWGZDcng2K2FvMnVlNFpiTVZuL0RvV2VMaUlHN3RHNTJFRmxDeTNLRjlCQ2xPVS8xXG5JUUZFV2xTUGdCT09lTG11RFREcFZXYlZ0RzNMa1FvQWpoVUx5cmc0YndWc1ZEQzN3dTVZVkVsYUs0SzBzNTNLXG5qUXYvbm1SckFnTUJBQUVDZ2dFQUFxV2lVWktnN0Z5R0M1MmhBdFd3VHdibUN6K3Q0VnJhQmxEOEFIaVZhZjcrXG5kTlJmdDZMVlVSdXU0SG0xSDBkL1hHUk5VcElyeUFIdk10Qlhja1BIMTB2bmdrSmpVNXZKeG5BQU5NeUZZZ00yXG44MmtVTnRUQ2FtR1lNRkhaVlFUemJuU2dVazlQdXFqOVdlUDh6Y1ZoNmFyMU9VMWRabVFRQTJMeXQvWXFEVHp4XG5ZK3hkNWNMZmc4T1NqeTBQSjl2N2VKc0RTdEZOeGxhRGtkNmhqbHhyVThEMS9JMTRnSzdoTDk4R1ZQT3NRMEI3XG4ydmhrek11bWhYYTNSN2lLZ3V3aVBWeE92R1gvYkpXRTJSUHZIWGtFTGpmRVdPcHFRTHpGMXhaWWw5aVZDbmlzXG5nbmxhZjJ1ei9ocTdJTTU5eG5SQU1ZcDBDb0lKK2NaOWhZSkpxSWNoTVFLQmdRRDA4UUFFZk5zNWxzc1Y3WFhZXG5tei91U2Y3M25kNEZieVRjRjc4dWlMbE55VWhUYTRweDNrRGkvNGdsRjdFTmZSak9SYU42bDNTa1NTRnpNRktLXG5MOWZNeFdkR1o4Z0RJT0JoY2d4NEhRVEZJN1RCL1FtUVNqVmtnSkhSeU93R3dOQ3FDQTRRUFFqbUpmRkU0ZTBHXG43aG5sU0Q0dnI0UXJtNkJiTW42MTcwY3JRd0tCZ1FEaE9vcmhZVFZTTkVFNGhDM2tpb3laWXFxYjRhYkFIUzFZXG5sNEdBNi85Q0VjTWRiYldQRXR3NFhhRytDWGJwSUpmR2VVTjRqUWFBSDFpQ2V1Y1FwZzR6bTIydW1MRUoxWFZxXG5XTnFZbTEzd1Z5UGRSc2JoSnhncjI0SGE4NXFsQ1pIemV6OG5PWXVnaGdTRDhvT1piVzJ0M0FwcnVlU1FGTXI2XG5GbDRhcDNiTHVRS0JnQW1NbDc2VkM0cnNPUkNxeUV4Z2lSYUdKZjJMVnd1Sk1MdXY1VkV3SFdGTjlwYmgrMnpEXG5DRzZSSGNLc2NNZWcxK1c2eTB2Tk9jdnAyZmIrckVrYzRtSG1WRWRuWm1IUTEwNlZQcTAwSEdwL0lOM3JPb000XG5rV3BRcE42ejRaZkZ6cHpDWWFINmJ5MWh6MDByTGExMmZPWDJjaGd1MUkxS3JPN0JRalZmbGJ1M0FvR0FaZENMXG5HNXRQK1ZnNTZJeUlHbm92V045cmRKQXJTMGxsU0ZrazU5ekhSVnkyTVVWNC83WnM2dVlZeWNtSmdaV0VSdXBtXG5mOFp3bTlhUHNseFF2QXYwKzR0VnA4bktya0ZhbExxYUJzYWxUcEoxMmYrMncrMWlWZUVpOEpHUzVPeFFtQnFzXG56OVNKdEFVaFlXeHQ1UnU4cXcxL2dIZEdSWVBBeGhENmRWNGlxN0VDZ1lBSnV6bEtjWHNiZnA5emltbFVnTFc1XG5iaXN3TGNCUXlZSEhCWExteFpGS3N5RSt5Tm80MlRCWjdxNmNaVVorNW8vU1FQN3g0a3NsZkNucldQbjM0bjBtXG4wd2lMVDREN2pHV2JpY1lpcTNLQVBob0gvMm40QVM2OXNGVndGUjAxTkd5d3RONVRYRlN6QVRpTjUyS2RiL3pHXG5paHh0NmM2blVuNFMvUDlLdzJ0NlBBPT1cbi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS1cbiIsCiAgImNsaWVudF9lbWFpbCI6ICJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0B0ZXJhcGlhLW9ubGluZS0yZmNmMS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsCiAgImNsaWVudF9pZCI6ICIxMDUxNjA1ODYxMjU2NjU1MDE4NzgiLAogICJhdXRoX3VyaSI6ICJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vby9vYXV0aDIvYXV0aCIsCiAgInRva2VuX3VyaSI6ICJodHRwczovL29hdXRoMi5nb29nbGVhcGlzLmNvbS90b2tlbiIsCiAgImF1dGhfcHJvdmlkZXJfeDUwOV9jZXJ0X3VybCI6ICJodHRwczovL3d3dy5nb29nbGVhcGlzLmNvbS9vYXV0aDIvdjEvY2VydHMiLAogICJjbGllbnRfeDUwOV9jZXJ0X3VybCI6ICJodHRwczovL3d3dy5nb29nbGVhcGlzLmNvbS9yb2JvdC92MS9tZXRhZGF0YS94NTA5L2ZpcmViYXNlLWFkbWluc2RrLWZic3ZjJTQwdGVyYXBpYS1vbmxpbmUtMmZjZjEuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLAogICJ1bml2ZXJzZV9kb21haW4iOiAiZ29vZ2xlYXBpcy5jb20iCn0K";
+
+const serviceAccount = JSON.parse(Buffer.from(serviceAccountBase64, "base64").toString("utf-8"));
+const app = initializeApp({ credential: cert(serviceAccount) });
+const db = getFirestore(app);
+
+async function fix() {
+    const barbaraRavanalId = "OvSazxHj9rcPprE0rZyMOidWJ553";
+    const now = Timestamp.now();
+    const appointmentDate = Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+
+    // Create appointment for Barbara Ravanal (the logged-in professional)
+    const ref = await db.collection("appointments").add({
+        userId: "test-patient-barbara-ravanal",
+        userEmail: "barbara.ravanal@test.com",
+        userName: "Barbara Ravanal (Paciente Test)",
+        professionalId: barbaraRavanalId,
+        professionalName: "Barbara Ravanal",
+        serviceSlug: "atencion-temprana",
+        serviceName: "Atención Temprana",
+        date: appointmentDate,
+        status: "confirmed",
+        createdAt: now,
+        notes: "",
+        reminderSent: false,
+    });
+    console.log(`✓ Created appointment for Barbara Ravanal (profesional): ${ref.id}`);
+    console.log("🎉 Reload /profesional/planes and the patient should appear!");
+    process.exit(0);
+}
+
+fix().catch(console.error);
