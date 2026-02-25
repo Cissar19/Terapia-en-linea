@@ -5,9 +5,10 @@ import { useEffect } from "react";
 
 interface CalEmbedProps {
   calLink: string;
+  onBookingSuccessful?: () => void;
 }
 
-export default function CalEmbed({ calLink }: CalEmbedProps) {
+export default function CalEmbed({ calLink, onBookingSuccessful }: CalEmbedProps) {
   useEffect(() => {
     (async () => {
       const cal = await getCalApi();
@@ -20,8 +21,14 @@ export default function CalEmbed({ calLink }: CalEmbedProps) {
           dark: { "cal-brand": "#4361EE" },
         },
       });
+      if (onBookingSuccessful) {
+        cal("on", {
+          action: "bookingSuccessful",
+          callback: onBookingSuccessful,
+        });
+      }
     })();
-  }, []);
+  }, [onBookingSuccessful]);
 
   return (
     <Cal
