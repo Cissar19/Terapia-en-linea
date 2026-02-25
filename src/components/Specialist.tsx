@@ -20,14 +20,15 @@ export default function Specialist() {
           <div className="flex-1 flex justify-center">
             <div className="relative">
               {/* Photo container */}
-              <div className="w-72 h-80 md:w-80 md:h-96 rounded-3xl bg-lavender overflow-hidden flex items-end justify-center">
-                <svg
-                  className="w-48 h-64 md:w-56 md:h-72 text-blue/20"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
-                </svg>
+              <div className="w-72 h-80 md:w-80 md:h-96 rounded-3xl overflow-hidden">
+                <Image
+                  src="/barbara.jpg"
+                  alt="Bárbara Alarcón Villafaña — Terapeuta Ocupacional"
+                  width={320}
+                  height={384}
+                  className="w-full h-full object-cover object-top"
+                  priority
+                />
               </div>
 
               {/* Floating badges */}
@@ -48,6 +49,24 @@ export default function Specialist() {
                   <polygon points="20,2 25,15 39,15 28,24 32,37 20,29 8,37 12,24 1,15 15,15" fill="#FF6B9D" />
                 </svg>
               </div>
+            </div>
+
+            {/* Video intro */}
+            <div className="mt-8 w-72 md:w-80">
+              <a
+                href="https://www.instagram.com/to.barbaraalarconv/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group block rounded-2xl bg-foreground/5 border-2 border-dashed border-gray-200 p-5 text-center hover:border-blue hover:bg-blue/5 transition-all"
+              >
+                <div className="mx-auto w-12 h-12 rounded-full bg-blue/10 flex items-center justify-center mb-3 group-hover:bg-blue/20 transition-colors">
+                  <svg className="w-5 h-5 text-blue ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-semibold text-foreground">Conóceme en Instagram</p>
+                <p className="text-xs text-gray-500 mt-1">Mira cómo trabajo con las familias</p>
+              </a>
             </div>
           </div>
 

@@ -104,3 +104,113 @@ html {
 .animate-marquee {
   animation: marquee 30s linear infinite;
 }
+
+/* Slide animations for sticky bar */
+@keyframes slide-down {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-down {
+  animation: slide-down 300ms ease-out;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slide-up 300ms ease-out;
+}
+
+/* Fade-in-up for staggered dashboard entries */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 500ms ease-out both;
+}
+
+.animation-delay-1 { animation-delay: 75ms; }
+.animation-delay-2 { animation-delay: 150ms; }
+.animation-delay-3 { animation-delay: 225ms; }
+.animation-delay-4 { animation-delay: 300ms; }
+.animation-delay-5 { animation-delay: 375ms; }
+.animation-delay-6 { animation-delay: 450ms; }
+.animation-delay-7 { animation-delay: 525ms; }
+.animation-delay-8 { animation-delay: 600ms; }
+.animation-delay-9 { animation-delay: 675ms; }
+.animation-delay-10 { animation-delay: 750ms; }
+
+/* Icon bounce on group hover */
+@keyframes icon-bounce {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+  60% { transform: translateY(-2px); }
+}
+
+.group:hover .group-hover-icon-bounce {
+  animation: icon-bounce 500ms ease-out;
+}
+
+/* Soft pulse for countdown indicator */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.15); }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* Progress ring — CSS-only with conic-gradient */
+.progress-ring {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--ring-color, #2DC653) calc(var(--progress, 0) * 1%),
+    #e5e7eb calc(var(--progress, 0) * 1%)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring::after {
+  content: "";
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: white;
+}
+
+.progress-ring-sm {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--ring-color, #2DC653) calc(var(--progress, 0) * 1%),
+    #e5e7eb calc(var(--progress, 0) * 1%)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring-sm::after {
+  content: "";
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: white;
+}

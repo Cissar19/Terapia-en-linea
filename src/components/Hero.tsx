@@ -1,6 +1,10 @@
+"use client";
+
+import BookingWidget from "@/components/booking/BookingWidget";
+
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-lavender overflow-hidden pt-24">
+    <section id="hero" className="relative min-h-screen flex items-center bg-lavender overflow-hidden pt-24 pb-16">
       {/* Floating geometric shapes — SuperHi style: large, bold, colorful */}
 
       {/* Large green triangle - top left */}
@@ -41,57 +45,70 @@ export default function Hero() {
       </div>
 
       {/* Small blue square - mid left */}
-      <div className="absolute top-[45%] left-[28%] animate-wiggle">
+      <div className="absolute top-[45%] left-[28%] animate-wiggle hidden lg:block">
         <div className="w-12 h-12 bg-blue-light rounded-lg -rotate-12" />
       </div>
 
       {/* Small green circle - mid right */}
-      <div className="absolute bottom-[40%] right-[28%] animate-float-slow">
+      <div className="absolute bottom-[40%] right-[28%] animate-float-slow hidden lg:block">
         <div className="w-14 h-14 rounded-full bg-green-light border-3 border-green" />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
-        {/* Small badge/icon circle */}
-        <div className="mx-auto mb-8 w-14 h-14 rounded-full bg-foreground flex items-center justify-center">
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
+      {/* Content — two columns on desktop */}
+      <div className="relative z-10 w-full px-6 max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:gap-12">
+          {/* Left column — text */}
+          <div className="flex-1 text-center lg:text-left">
+            {/* Small badge/icon circle */}
+            <div className="mx-auto lg:mx-0 mb-8 w-14 h-14 rounded-full bg-foreground flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </div>
+
+            <h1 className="font-display text-5xl sm:text-6xl md:text-8xl lg:text-7xl xl:text-8xl text-foreground leading-[1.05] tracking-tight">
+              Tu bienestar,{" "}
+              <br className="hidden sm:block" />
+              mi compromiso
+            </h1>
+
+            <p className="mt-6 text-base md:text-lg text-gray-500 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+              Terapeuta Ocupacional especialista en neurodesarrollo infantil.
+              Acompañamos a familias de niños con TEA y alteraciones del desarrollo
+              con un proceso sencillo, sin burocracia y mucha contención humana.
+            </p>
+
+            {/* Trust badges — desktop only under text */}
+            <div className="mt-10 hidden lg:flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-gray-400 font-medium">
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Pago seguro Webpay
+              </span>
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Confirmación instantánea
+              </span>
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                Profesionales certificados
+              </span>
+            </div>
+          </div>
+
+          {/* Right column — Booking Widget */}
+          <div className="mt-10 lg:mt-0 w-full lg:w-[420px] xl:w-[460px] flex-shrink-0">
+            <BookingWidget variant="hero" />
+          </div>
         </div>
 
-        <h1 className="font-display text-5xl sm:text-6xl md:text-8xl text-foreground leading-[1.05] tracking-tight">
-          Tu bienestar,{" "}
-          <br className="hidden sm:block" />
-          mi compromiso
-        </h1>
-
-        <p className="mt-6 text-base md:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
-          Terapeuta Ocupacional especialista en neurodesarrollo infantil.
-          Acompañamos a familias de niños con TEA y alteraciones del desarrollo
-          con un proceso sencillo, sin burocracia y mucha contención humana.
-        </p>
-
-        {/* Buttons — SuperHi style: one dark filled, one white outlined */}
-        <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-          <a
-            href="#servicios"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-8 py-4 text-white font-semibold text-base hover:bg-foreground/90 transition-colors"
-          >
-            Agendar Cita
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </a>
-          <a
-            href="#como-funciona"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-foreground font-semibold text-base hover:bg-gray-50 transition-colors border border-gray-200"
-          >
-            Cómo Funciona
-          </a>
-        </div>
-
-        {/* Trust badges — horizontal like a logo bar */}
-        <div className="mt-20 flex flex-wrap justify-center items-center gap-x-10 gap-y-4 text-sm text-gray-400 font-medium">
+        {/* Trust badges — mobile only, centered below widget */}
+        <div className="mt-12 flex lg:hidden flex-wrap justify-center items-center gap-x-10 gap-y-4 text-sm text-gray-400 font-medium">
           <span className="flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />

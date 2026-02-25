@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import StickyBookingBar from "@/components/booking/StickyBookingBar";
 import BuiltDifferent from "@/components/BuiltDifferent";
 import Specialist from "@/components/Specialist";
 import Services from "@/components/Services";
@@ -15,6 +16,7 @@ export default function LandingPage() {
     <main className="overflow-hidden">
       <Navbar />
       <Hero />
+      <StickyBookingBar />
       <BuiltDifferent />
       <DividerArt />
       <Services />
