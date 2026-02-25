@@ -8,6 +8,11 @@ export default function PerfilPage() {
   const { user, profile, refreshProfile } = useAuth();
   const [displayName, setDisplayName] = useState(profile?.displayName || "");
   const [phone, setPhone] = useState(profile?.phone || "");
+  const [age, setAge] = useState(profile?.age || "");
+  const [residenceCommune, setResidenceCommune] = useState(profile?.residenceCommune || "");
+  const [education, setEducation] = useState(profile?.education || "");
+  const [diagnoses, setDiagnoses] = useState(profile?.diagnoses || "");
+  const [medications, setMedications] = useState(profile?.medications || "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -19,6 +24,11 @@ export default function PerfilPage() {
     await updateUserProfile(user.uid, {
       displayName: displayName.trim(),
       phone: phone.trim() || null,
+      age: age.trim(),
+      residenceCommune: residenceCommune.trim(),
+      education: education.trim(),
+      diagnoses: diagnoses.trim(),
+      medications: medications.trim(),
     });
     await refreshProfile();
     setSaving(false);
@@ -68,6 +78,82 @@ export default function PerfilPage() {
               placeholder="+56 9 1234 5678"
               className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink/30 focus:border-pink"
             />
+          </div>
+
+          {/* Clinical data section */}
+          <div className="pt-4 border-t border-gray-100">
+            <h2 className="text-sm font-bold text-foreground mb-1">Información Clínica</h2>
+            <p className="text-xs text-gray-400 mb-4">
+              Estos datos ayudan a tu terapeuta a preparar tu plan de intervención.
+            </p>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">
+                    Edad
+                  </label>
+                  <input
+                    type="text"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    placeholder="Ej: 5 años"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink/30 focus:border-pink"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">
+                    Comuna de residencia
+                  </label>
+                  <input
+                    type="text"
+                    value={residenceCommune}
+                    onChange={(e) => setResidenceCommune(e.target.value)}
+                    placeholder="Ej: Providencia"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink/30 focus:border-pink"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">
+                  Escolaridad
+                </label>
+                <input
+                  type="text"
+                  value={education}
+                  onChange={(e) => setEducation(e.target.value)}
+                  placeholder="Ej: Pre-kínder, Colegio XYZ"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink/30 focus:border-pink"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">
+                  Diagnósticos
+                </label>
+                <textarea
+                  value={diagnoses}
+                  onChange={(e) => setDiagnoses(e.target.value)}
+                  rows={2}
+                  placeholder="Ej: TEA, TDAH, retraso del desarrollo..."
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink/30 focus:border-pink resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">
+                  Medicamentos
+                </label>
+                <textarea
+                  value={medications}
+                  onChange={(e) => setMedications(e.target.value)}
+                  rows={2}
+                  placeholder="Ej: Risperidona 0.5mg, Melatonina..."
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink/30 focus:border-pink resize-none"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">

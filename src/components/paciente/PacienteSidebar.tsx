@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const navItems = [
   {
@@ -14,20 +14,20 @@ const navItems = [
     ),
   },
   {
+    label: "Mis Tareas",
+    href: "/mi-panel/tareas",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
     label: "Mi Perfil",
     href: "/mi-panel/perfil",
     icon: (
       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-      </svg>
-    ),
-  },
-  {
-    label: "Agendar Cita",
-    href: "/#servicios",
-    icon: (
-      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
       </svg>
     ),
   },
@@ -40,6 +40,16 @@ interface Props {
 
 export default function PacienteSidebar({ open, onClose }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  function handleBooking() {
+    onClose();
+    if (pathname === "/mi-panel") {
+      window.dispatchEvent(new Event("open-booking"));
+    } else {
+      router.push("/mi-panel?agendar=1");
+    }
+  }
 
   return (
     <aside
@@ -67,8 +77,8 @@ export default function PacienteSidebar({ open, onClose }: Props) {
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => {
           const active =
-            item.href === "/"
-              ? pathname === "/"
+            item.href === "/" || item.href === "/mi-panel"
+              ? pathname === item.href
               : pathname.startsWith(item.href);
           return (
             <Link
@@ -86,7 +96,30 @@ export default function PacienteSidebar({ open, onClose }: Props) {
             </Link>
           );
         })}
+
+        <button
+          onClick={handleBooking}
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors text-gray-600 hover:bg-gray-50 hover:text-foreground w-full"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          Agendar Cita
+        </button>
       </nav>
+
+      <div className="p-4 border-t border-gray-100">
+        <Link
+          href="/"
+          onClick={onClose}
+          className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-foreground transition-colors"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+          </svg>
+          Volver al sitio
+        </Link>
+      </div>
     </aside>
   );
 }
