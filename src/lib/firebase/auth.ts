@@ -5,6 +5,7 @@ import {
   GoogleAuthProvider,
   signOut as firebaseSignOut,
   updateProfile,
+  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
 } from "firebase/auth";
 import { getFirebaseAuth } from "./config";
 import { createUserProfile, getUserProfile } from "./firestore";
@@ -63,6 +64,10 @@ export async function signInWithGoogle() {
   setCookie(token);
 
   return { user: cred.user, profile };
+}
+
+export async function sendPasswordReset(email: string) {
+  await firebaseSendPasswordResetEmail(getFirebaseAuth(), email);
 }
 
 export async function signOut() {

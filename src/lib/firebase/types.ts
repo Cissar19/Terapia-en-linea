@@ -9,6 +9,14 @@ export interface UserProfile {
   photoURL: string | null;
   role: UserRole;
   phone: string | null;
+  calUsername?: string; // Cal.com username — required for professionals
+  bio?: string;         // Short bio shown to patients in booking flow
+  // Patient clinical data (filled by patient in their profile)
+  age?: string;
+  residenceCommune?: string;
+  education?: string;
+  diagnoses?: string;
+  medications?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -29,6 +37,8 @@ export interface Appointment {
   createdAt: Timestamp;
   notes: string;
   reminderSent?: boolean;
+  cancelledAt?: Timestamp;
+  cancelledBy?: string;
 }
 
 export interface ClinicalNote {
@@ -41,6 +51,14 @@ export interface ClinicalNote {
   createdAt: Timestamp;
 }
 
+export type TaskPriority = "alta" | "media" | "baja";
+
+export interface TaskAttachment {
+  name: string;
+  url: string;
+  type: "file" | "drive";
+}
+
 export interface PatientTask {
   id: string;
   professionalId: string;
@@ -50,7 +68,11 @@ export interface PatientTask {
   title: string;
   description: string;
   completed: boolean;
+  priority?: TaskPriority;
+  dueDate?: Timestamp | null;
+  attachments?: TaskAttachment[];
   createdAt: Timestamp;
+  updatedAt?: Timestamp;
 }
 
 export interface MonthlyData {
@@ -78,4 +100,48 @@ export interface DashboardStats {
   revenueEstimate: number;
   monthlyData: MonthlyData[];
   recentAppointments: RecentAppointment[];
+}
+
+export type PlanStatus = "active" | "completed" | "archived";
+
+export interface PlanObjective {
+  id: string;
+  text: string;
+  completed: boolean;
+  completedAt?: Timestamp;
+}
+
+export interface InterventionPlan {
+  id: string;
+  professionalId: string;
+  professionalName: string;
+  // Patient data
+  patientId: string;
+  patientName: string;
+  age: string;
+  residenceCommune: string;
+  education: string;
+  diagnoses: string;
+  medications: string;
+  // Occupational profile
+  personalHistory: string;
+  familyHistory: string;
+  medicalHistory: string;
+  occupationalHistory: string;
+  // Clinical
+  occupationalProblem: string;
+  interventionFocus: string;
+  appliedEvaluations: string;
+  interventionModels: string;
+  // Objectives
+  generalObjective: string;
+  specificObjectives: string;
+  achievementIndicators: string;
+  interventionStrategies: string;
+  // Structured objectives & status
+  status: PlanStatus;
+  objectives: PlanObjective[];
+  // Meta
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }

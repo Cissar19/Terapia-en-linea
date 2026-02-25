@@ -5,12 +5,15 @@ import {
   getDocs,
   addDoc,
   updateDoc,
+  deleteDoc,
   collection,
   query,
   where,
   orderBy,
   Timestamp,
   getCountFromServer,
+  onSnapshot,
+  type Unsubscribe,
 } from "firebase/firestore";
 import { getFirebaseDb } from "./config";
 import type {
@@ -22,6 +25,8 @@ import type {
   RecentAppointment,
   ClinicalNote,
   PatientTask,
+  InterventionPlan,
+  PlanStatus,
 } from "./types";
 
 // ── Users ──
@@ -76,7 +81,7 @@ export async function updateUserRole(uid: string, role: UserRole): Promise<void>
 
 export async function updateUserProfile(
   uid: string,
-  data: Partial<Pick<UserProfile, "displayName" | "phone">>
+  data: Partial<Pick<UserProfile, "displayName" | "phone" | "age" | "residenceCommune" | "education" | "diagnoses" | "medications">>
 ): Promise<void> {
   const db = getFirebaseDb();
   await updateDoc(doc(db, "users", uid), {
@@ -100,11 +105,12 @@ export async function getAppointmentsByProfessional(uid: string): Promise<Appoin
   const snap = await getDocs(
     query(
       collection(db, "appointments"),
-      where("professionalId", "==", uid),
-      orderBy("date", "desc")
+      where("professionalId", "==", uid)
     )
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Appointment);
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }) as Appointment)
+    .sort((a, b) => b.date.toMillis() - a.date.toMillis());
 }
 
 export async function getAppointmentsByPatient(uid: string): Promise<Appointment[]> {
@@ -112,11 +118,12 @@ export async function getAppointmentsByPatient(uid: string): Promise<Appointment
   const snap = await getDocs(
     query(
       collection(db, "appointments"),
-      where("userId", "==", uid),
-      orderBy("date", "desc")
+      where("userId", "==", uid)
     )
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Appointment);
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }) as Appointment)
+    .sort((a, b) => b.date.toMillis() - a.date.toMillis());
 }
 
 export async function updateAppointmentStatus(
@@ -145,11 +152,12 @@ export async function getNotesByProfessional(uid: string): Promise<ClinicalNote[
   const snap = await getDocs(
     query(
       collection(db, "clinical_notes"),
-      where("professionalId", "==", uid),
-      orderBy("createdAt", "desc")
+      where("professionalId", "==", uid)
     )
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as ClinicalNote);
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }) as ClinicalNote)
+    .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 }
 
 export async function getNotesByPatient(patientId: string): Promise<ClinicalNote[]> {
@@ -157,23 +165,26 @@ export async function getNotesByPatient(patientId: string): Promise<ClinicalNote
   const snap = await getDocs(
     query(
       collection(db, "clinical_notes"),
-      where("patientId", "==", patientId),
-      orderBy("createdAt", "desc")
+      where("patientId", "==", patientId)
     )
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as ClinicalNote);
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }) as ClinicalNote)
+    .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 }
 
 // ── Patient Tasks ──
 
 export async function addPatientTask(
-  data: Omit<PatientTask, "id" | "createdAt" | "completed">
+  data: Omit<PatientTask, "id" | "createdAt" | "completed" | "updatedAt">
 ): Promise<string> {
   const db = getFirebaseDb();
+  const now = Timestamp.now();
   const docRef = await addDoc(collection(db, "patient_tasks"), {
     ...data,
     completed: false,
-    createdAt: Timestamp.now(),
+    createdAt: now,
+    updatedAt: now,
   });
   return docRef.id;
 }
@@ -183,11 +194,12 @@ export async function getTasksByPatient(patientId: string): Promise<PatientTask[
   const snap = await getDocs(
     query(
       collection(db, "patient_tasks"),
-      where("patientId", "==", patientId),
-      orderBy("createdAt", "desc")
+      where("patientId", "==", patientId)
     )
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as PatientTask);
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }) as PatientTask)
+    .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 }
 
 export async function getTasksByProfessional(uid: string): Promise<PatientTask[]> {
@@ -195,16 +207,33 @@ export async function getTasksByProfessional(uid: string): Promise<PatientTask[]
   const snap = await getDocs(
     query(
       collection(db, "patient_tasks"),
-      where("professionalId", "==", uid),
-      orderBy("createdAt", "desc")
+      where("professionalId", "==", uid)
     )
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as PatientTask);
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }) as PatientTask)
+    .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 }
 
 export async function toggleTaskCompleted(taskId: string, completed: boolean): Promise<void> {
   const db = getFirebaseDb();
   await updateDoc(doc(db, "patient_tasks", taskId), { completed });
+}
+
+export async function updatePatientTask(
+  taskId: string,
+  data: Partial<Pick<PatientTask, "title" | "description" | "priority" | "dueDate" | "attachments">>
+): Promise<void> {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, "patient_tasks", taskId), {
+    ...data,
+    updatedAt: Timestamp.now(),
+  });
+}
+
+export async function deletePatientTask(taskId: string): Promise<void> {
+  const db = getFirebaseDb();
+  await deleteDoc(doc(db, "patient_tasks", taskId));
 }
 
 // ── Helpers for webhook ──
@@ -217,12 +246,18 @@ export async function getUserByEmail(email: string): Promise<UserProfile | null>
   return snap.empty ? null : (snap.docs[0].data() as UserProfile);
 }
 
-export async function getProfessionalUser(): Promise<UserProfile | null> {
+export async function getAllProfessionals(): Promise<UserProfile[]> {
   const db = getFirebaseDb();
   const snap = await getDocs(
     query(collection(db, "users"), where("role", "==", "profesional"))
   );
-  return snap.empty ? null : (snap.docs[0].data() as UserProfile);
+  return snap.docs.map((d) => d.data() as UserProfile);
+}
+
+// Keep legacy single-professional helper for webhook compatibility
+export async function getProfessionalUser(): Promise<UserProfile | null> {
+  const professionals = await getAllProfessionals();
+  return professionals.length > 0 ? professionals[0] : null;
 }
 
 export async function createAppointment(
@@ -255,13 +290,16 @@ export async function getStats(): Promise<DashboardStats> {
   // New patients this month
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const newPatientsSnap = await getCountFromServer(
+  const startOfMonthTs = Timestamp.fromDate(startOfMonth);
+  const allPatientsSnap = await getDocs(
     query(
       collection(db, "users"),
-      where("role", "==", "paciente"),
-      where("createdAt", ">=", Timestamp.fromDate(startOfMonth))
+      where("role", "==", "paciente")
     )
   );
+  const newPatientsCount = allPatientsSnap.docs.filter(
+    (d) => d.data().createdAt && (d.data().createdAt as Timestamp).toMillis() >= startOfMonthTs.toMillis()
+  ).length;
 
   // Last 6 months of appointments for chart + revenue
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
@@ -327,9 +365,204 @@ export async function getStats(): Promise<DashboardStats> {
     confirmedAppointments: confirmed.data().count,
     cancelledAppointments: cancelled.data().count,
     completedAppointments: completed.data().count,
-    newPatientsThisMonth: newPatientsSnap.data().count,
+    newPatientsThisMonth: newPatientsCount,
     revenueEstimate,
     monthlyData,
     recentAppointments,
   };
+}
+
+// ── Intervention Plans ──
+
+export async function addInterventionPlan(
+  data: Omit<InterventionPlan, "id" | "createdAt" | "updatedAt" | "status" | "objectives"> &
+    Partial<Pick<InterventionPlan, "status" | "objectives">>
+): Promise<string> {
+  const db = getFirebaseDb();
+  const now = Timestamp.now();
+  const docRef = await addDoc(collection(db, "intervention_plans"), {
+    ...data,
+    status: data.status ?? "active",
+    objectives: data.objectives ?? [],
+    createdAt: now,
+    updatedAt: now,
+  });
+  return docRef.id;
+}
+
+function normalizePlan(d: { id: string; data: () => Record<string, unknown> }): InterventionPlan {
+  const raw = d.data();
+  return {
+    ...raw,
+    id: d.id,
+    status: (raw.status as PlanStatus) ?? "active",
+    objectives: (raw.objectives as InterventionPlan["objectives"]) ?? [],
+  } as InterventionPlan;
+}
+
+export async function getInterventionPlansByProfessional(
+  uid: string
+): Promise<InterventionPlan[]> {
+  const db = getFirebaseDb();
+  const snap = await getDocs(
+    query(
+      collection(db, "intervention_plans"),
+      where("professionalId", "==", uid)
+    )
+  );
+  return snap.docs
+    .map((d) => normalizePlan({ id: d.id, data: () => d.data() }))
+    .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+}
+
+export async function getInterventionPlansByPatient(
+  patientId: string
+): Promise<InterventionPlan[]> {
+  const db = getFirebaseDb();
+  const snap = await getDocs(
+    query(
+      collection(db, "intervention_plans"),
+      where("patientId", "==", patientId)
+    )
+  );
+  return snap.docs
+    .map((d) => normalizePlan({ id: d.id, data: () => d.data() }))
+    .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+}
+
+export async function getActivePlanForPatient(
+  patientId: string
+): Promise<InterventionPlan | null> {
+  const plans = await getInterventionPlansByPatient(patientId);
+  return plans.find((p) => p.status === "active") ?? null;
+}
+
+export async function getInterventionPlan(
+  id: string
+): Promise<InterventionPlan | null> {
+  const db = getFirebaseDb();
+  const snap = await getDoc(doc(db, "intervention_plans", id));
+  return snap.exists()
+    ? normalizePlan({ id: snap.id, data: () => snap.data() })
+    : null;
+}
+
+export async function updateInterventionPlan(
+  id: string,
+  data: Partial<Omit<InterventionPlan, "id" | "createdAt">>
+): Promise<void> {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, "intervention_plans", id), {
+    ...data,
+    updatedAt: Timestamp.now(),
+  });
+}
+
+// ── Cancel appointment (patient) ──
+
+export async function cancelAppointmentByPatient(id: string, userId: string): Promise<void> {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, "appointments", id), {
+    status: "cancelled",
+    cancelledAt: Timestamp.now(),
+    cancelledBy: userId,
+  });
+}
+
+// ── Real-time listeners (onSnapshot) ──
+
+export function onAppointmentsByPatient(
+  uid: string,
+  callback: (appointments: Appointment[]) => void
+): Unsubscribe {
+  const db = getFirebaseDb();
+  return onSnapshot(
+    query(collection(db, "appointments"), where("userId", "==", uid)),
+    (snap) => {
+      const results = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }) as Appointment)
+        .sort((a, b) => b.date.toMillis() - a.date.toMillis());
+      callback(results);
+    }
+  );
+}
+
+export function onAppointmentsByProfessional(
+  uid: string,
+  callback: (appointments: Appointment[]) => void
+): Unsubscribe {
+  const db = getFirebaseDb();
+  return onSnapshot(
+    query(collection(db, "appointments"), where("professionalId", "==", uid)),
+    (snap) => {
+      const results = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }) as Appointment)
+        .sort((a, b) => b.date.toMillis() - a.date.toMillis());
+      callback(results);
+    }
+  );
+}
+
+export function onTasksByPatient(
+  patientId: string,
+  callback: (tasks: PatientTask[]) => void
+): Unsubscribe {
+  const db = getFirebaseDb();
+  return onSnapshot(
+    query(collection(db, "patient_tasks"), where("patientId", "==", patientId)),
+    (snap) => {
+      const results = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }) as PatientTask)
+        .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+      callback(results);
+    }
+  );
+}
+
+export function onTasksByProfessional(
+  uid: string,
+  callback: (tasks: PatientTask[]) => void
+): Unsubscribe {
+  const db = getFirebaseDb();
+  return onSnapshot(
+    query(collection(db, "patient_tasks"), where("professionalId", "==", uid)),
+    (snap) => {
+      const results = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }) as PatientTask)
+        .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+      callback(results);
+    }
+  );
+}
+
+export function onNotesByPatient(
+  patientId: string,
+  callback: (notes: ClinicalNote[]) => void
+): Unsubscribe {
+  const db = getFirebaseDb();
+  return onSnapshot(
+    query(collection(db, "clinical_notes"), where("patientId", "==", patientId)),
+    (snap) => {
+      const results = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }) as ClinicalNote)
+        .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+      callback(results);
+    }
+  );
+}
+
+export function onNotesByProfessional(
+  uid: string,
+  callback: (notes: ClinicalNote[]) => void
+): Unsubscribe {
+  const db = getFirebaseDb();
+  return onSnapshot(
+    query(collection(db, "clinical_notes"), where("professionalId", "==", uid)),
+    (snap) => {
+      const results = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }) as ClinicalNote)
+        .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+      callback(results);
+    }
+  );
 }
