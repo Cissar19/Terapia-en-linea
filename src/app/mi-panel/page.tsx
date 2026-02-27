@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import BookingModal from "@/components/booking/BookingModal";
 import { useCountUp } from "@/hooks/useCountUp";
-import { services, type Service } from "@/lib/services";
+import { toService, type Service } from "@/lib/services";
+import { useServices } from "@/contexts/ServicesContext";
 import { toggleTaskCompleted, cancelAppointmentByPatient } from "@/lib/firebase/firestore";
 import { usePatientAppointments } from "@/hooks/useAppointments";
 import { usePatientTasks } from "@/hooks/useTasks";
@@ -36,6 +37,8 @@ function getRelativeDay(date: Date): string {
 
 export default function MiPanelPage() {
   const { user, profile } = useAuth();
+  const { services: docs } = useServices();
+  const services = useMemo(() => docs.map((d) => toService(d)), [docs]);
   const { data: appointments, loading: loadingAppts } = usePatientAppointments(user?.uid);
   const { data: tasks, loading: loadingTasks } = usePatientTasks(user?.uid);
   const { data: notes, loading: loadingNotes } = usePatientNotes(user?.uid);
@@ -185,6 +188,74 @@ export default function MiPanelPage() {
         </div>
       </div>
 
+      {/* ── Profile completion banner ── */}
+      {(() => {
+        const fields = [
+          { key: "phone", label: "Teléfono" },
+          { key: "birthDate", label: "Fecha de nacimiento" },
+          { key: "residenceCommune", label: "Comuna" },
+          { key: "education", label: "Escolaridad" },
+          { key: "diagnoses", label: "Diagnósticos" },
+        ] as const;
+        const missing = fields.filter((f) => !profile?.[f.key]?.trim?.());
+        if (missing.length === 0) return null;
+        const filled = fields.length - missing.length;
+        const pct = Math.round((filled / fields.length) * 100);
+        return (
+          <Link
+            href="/mi-panel/perfil"
+            className="group block mb-6 animate-fade-in-up animation-delay-1"
+          >
+            <div className="relative overflow-hidden rounded-2xl border border-yellow/30 bg-gradient-to-br from-yellow/10 via-white to-orange/5 p-5 hover:shadow-md hover:border-yellow/50 transition-all duration-200">
+              {/* Decorative blob */}
+              <div className="absolute -top-4 -right-4 h-20 w-20 rounded-full bg-yellow/20 blur-2xl" />
+
+              <div className="relative flex items-start gap-4">
+                {/* Icon */}
+                <div className="flex-shrink-0 h-11 w-11 rounded-2xl bg-yellow/20 flex items-center justify-center">
+                  <svg className="h-6 w-6 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+
+                {/* Text */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground mb-0.5">
+                    ¡Completa tu perfil para una mejor atención!
+                  </p>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    Tu terapeuta necesita conocerte mejor para personalizar tu plan.
+                    Aún te faltan:{" "}
+                    <span className="font-semibold text-orange">
+                      {missing.map((f) => f.label).join(", ")}
+                    </span>.
+                  </p>
+
+                  {/* Progress bar */}
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="flex-1 h-2 bg-yellow/20 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-orange rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-bold text-orange flex-shrink-0">{pct}% completado</span>
+                  </div>
+                </div>
+
+                {/* Arrow */}
+                <svg
+                  className="flex-shrink-0 h-5 w-5 text-gray-400 group-hover:translate-x-0.5 transition-transform mt-0.5"
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
+        );
+      })()}
+
       {/* Next appointment countdown card */}
       {nextAppt && (
         <div className="bg-blue rounded-2xl p-6 mb-6 text-white animate-fade-in-up animation-delay-1">
@@ -278,9 +349,8 @@ export default function MiPanelPage() {
                     <span className="text-[10px] font-bold text-blue mb-1">{m.count}</span>
                   )}
                   <div
-                    className={`w-full rounded-t-lg transition-colors ${
-                      m.count > 0 ? "bg-blue hover:bg-blue-dark" : "bg-gray-100"
-                    }`}
+                    className={`w-full rounded-t-lg transition-colors ${m.count > 0 ? "bg-blue hover:bg-blue-dark" : "bg-gray-100"
+                      }`}
                     style={{
                       height: m.count > 0
                         ? `${(m.count / maxSessions) * 80 + 10}%`
@@ -299,9 +369,8 @@ export default function MiPanelPage() {
           {milestones.map((m, i) => (
             <span
               key={i}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
-                m.unlocked ? m.color : "bg-gray-100 text-gray-400 opacity-50"
-              }`}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${m.unlocked ? m.color : "bg-gray-100 text-gray-400 opacity-50"
+                }`}
             >
               {m.unlocked ? (
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -418,11 +487,10 @@ export default function MiPanelPage() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="text-sm font-medium text-foreground">{t.title}</p>
                           {t.priority && (
-                            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                              t.priority === "alta" ? "bg-red/10 text-red"
+                            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${t.priority === "alta" ? "bg-red/10 text-red"
                                 : t.priority === "media" ? "bg-yellow/15 text-orange"
-                                : "bg-green/10 text-green"
-                            }`}>
+                                  : "bg-green/10 text-green"
+                              }`}>
                               {t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}
                             </span>
                           )}
