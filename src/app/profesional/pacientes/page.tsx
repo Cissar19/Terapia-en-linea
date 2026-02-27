@@ -133,8 +133,14 @@ export default function PacientesPage() {
         professionalName: profile.displayName,
         attachmentCount: uploadedAttachments.length || undefined,
       }),
-    }).catch(() => {});
+    }).catch(() => { });
 
+    // Revoke blob URLs to free memory
+    taskAttachments.forEach((att) => {
+      if (att.type === "file" && att.url.startsWith("blob:")) {
+        URL.revokeObjectURL(att.url);
+      }
+    });
     setTaskTitle("");
     setTaskDescription("");
     setTaskPriority("");
@@ -254,21 +260,19 @@ export default function PacientesPage() {
                     <div className="flex border-b border-gray-100">
                       <button
                         onClick={() => setActiveTab("notas")}
-                        className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
-                          activeTab === "notas"
+                        className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${activeTab === "notas"
                             ? "text-green border-b-2 border-green"
                             : "text-gray-400 hover:text-gray-600"
-                        }`}
+                          }`}
                       >
                         Notas Clínicas ({patientNotes.length})
                       </button>
                       <button
                         onClick={() => setActiveTab("tareas")}
-                        className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
-                          activeTab === "tareas"
+                        className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${activeTab === "tareas"
                             ? "text-green border-b-2 border-green"
                             : "text-gray-400 hover:text-gray-600"
-                        }`}
+                          }`}
                       >
                         Tareas ({completedTaskCount}/{patientTasks.length})
                       </button>
@@ -354,13 +358,12 @@ export default function PacientesPage() {
                                     key={pr}
                                     type="button"
                                     onClick={() => setTaskPriority(taskPriority === pr ? "" : pr)}
-                                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold transition-colors ${
-                                      taskPriority === pr
+                                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold transition-colors ${taskPriority === pr
                                         ? pr === "alta" ? "bg-red/10 text-red ring-1 ring-red/30"
                                           : pr === "media" ? "bg-yellow/15 text-orange ring-1 ring-yellow/30"
-                                          : "bg-green/10 text-green ring-1 ring-green/30"
+                                            : "bg-green/10 text-green ring-1 ring-green/30"
                                         : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-                                    }`}
+                                      }`}
                                   >
                                     {pr.charAt(0).toUpperCase() + pr.slice(1)}
                                   </button>
@@ -398,7 +401,7 @@ export default function PacientesPage() {
                                 onClick={() => setShowTaskDriveInput(!showTaskDriveInput)}
                                 className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 p-3 text-gray-500 hover:border-blue hover:bg-blue/5 hover:text-blue transition-all cursor-pointer"
                               >
-                                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z"/></svg>
+                                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z" /></svg>
                                 <span className="text-xs font-semibold">Link de Drive</span>
                               </button>
                             </div>
@@ -426,7 +429,7 @@ export default function PacientesPage() {
                                 {taskAttachments.map((att, i) => (
                                   <div key={i} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${att.type === "drive" ? "bg-blue/10" : "bg-gray-50"}`}>
                                     {att.type === "drive" ? (
-                                      <svg className="h-4 w-4 text-blue flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z"/></svg>
+                                      <svg className="h-4 w-4 text-blue flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z" /></svg>
                                     ) : (
                                       <svg className="h-4 w-4 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                                     )}
@@ -451,13 +454,11 @@ export default function PacientesPage() {
                                 return (
                                   <div
                                     key={t.id}
-                                    className={`p-3 rounded-xl text-sm flex items-start gap-3 ${
-                                      t.completed ? "bg-green/5" : "bg-yellow/10"
-                                    }`}
+                                    className={`p-3 rounded-xl text-sm flex items-start gap-3 ${t.completed ? "bg-green/5" : "bg-yellow/10"
+                                      }`}
                                   >
-                                    <div className={`mt-0.5 h-4 w-4 rounded-full border-2 flex-shrink-0 ${
-                                      t.completed ? "bg-green border-green" : "border-gray-300"
-                                    }`}>
+                                    <div className={`mt-0.5 h-4 w-4 rounded-full border-2 flex-shrink-0 ${t.completed ? "bg-green border-green" : "border-gray-300"
+                                      }`}>
                                       {t.completed && (
                                         <svg className="h-full w-full text-white p-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -470,11 +471,10 @@ export default function PacientesPage() {
                                           {t.title}
                                         </p>
                                         {t.priority && (
-                                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                                            t.priority === "alta" ? "bg-red/10 text-red"
+                                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${t.priority === "alta" ? "bg-red/10 text-red"
                                               : t.priority === "media" ? "bg-yellow/15 text-orange"
-                                              : "bg-green/10 text-green"
-                                          }`}>
+                                                : "bg-green/10 text-green"
+                                            }`}>
                                             {t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}
                                           </span>
                                         )}
@@ -499,7 +499,7 @@ export default function PacientesPage() {
                                           {t.attachments.map((att, ai) => (
                                             <a key={ai} href={att.url} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-colors ${att.type === "drive" ? "bg-blue/10 text-blue hover:bg-blue/20" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
                                               {att.type === "drive" ? (
-                                                <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z"/></svg>
+                                                <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z" /></svg>
                                               ) : (
                                                 <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                                               )}

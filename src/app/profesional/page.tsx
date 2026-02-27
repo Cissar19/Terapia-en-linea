@@ -17,13 +17,14 @@ export default function ProfesionalPage() {
   const { data: tasks, loading: loadingTasks } = useProfessionalTasks(user?.uid);
   const [plans, setPlans] = useState<InterventionPlan[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
+  const [plansError, setPlansError] = useState("");
   const loading = loadingAppts || loadingNotes || loadingTasks || loadingPlans;
 
   useEffect(() => {
     if (!user) return;
     getInterventionPlansByProfessional(user.uid)
-      .catch(() => [] as InterventionPlan[])
       .then(setPlans)
+      .catch(() => setPlansError("No se pudieron cargar los planes."))
       .finally(() => setLoadingPlans(false));
   }, [user]);
 
@@ -182,6 +183,16 @@ export default function ProfesionalPage() {
         ))}
       </div>
 
+      {/* Error banner */}
+      {plansError && (
+        <div className="mb-6 p-4 rounded-2xl bg-red/10 border border-red/20 flex items-center gap-3 animate-fade-in-up">
+          <svg className="h-5 w-5 text-red flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <p className="text-sm text-red">{plansError}</p>
+        </div>
+      )}
+
       {/* Patients without plan alert */}
       {patientsWithoutPlan > 0 && (
         <div className="mb-6 p-4 rounded-2xl bg-yellow/10 border border-yellow/20 flex items-center justify-between animate-fade-in-up animation-delay-6">
@@ -333,11 +344,10 @@ export default function ProfesionalPage() {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0 ml-3">
                       {t.priority && (
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                          t.priority === "alta" ? "bg-red/10 text-red"
-                            : t.priority === "media" ? "bg-yellow/15 text-orange"
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${t.priority === "alta" ? "bg-red/10 text-red"
+                          : t.priority === "media" ? "bg-yellow/15 text-orange"
                             : "bg-green/10 text-green"
-                        }`}>
+                          }`}>
                           {t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}
                         </span>
                       )}

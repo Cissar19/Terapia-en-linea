@@ -181,7 +181,16 @@ export default function PlanForm({
       setForm((prev) => ({
         ...prev,
         patientName: patient.profile?.displayName || patient.name,
-        age: patient.profile?.age || "",
+        age: (() => {
+          const bd = patient.profile?.birthDate;
+          if (!bd) return "";
+          const birth = new Date(bd);
+          const today = new Date();
+          let a = today.getFullYear() - birth.getFullYear();
+          const m = today.getMonth() - birth.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) a--;
+          return `${a} años`;
+        })(),
         residenceCommune: patient.profile?.residenceCommune || "",
         education: patient.profile?.education || "",
         diagnoses: patient.profile?.diagnoses || "",
@@ -266,6 +275,28 @@ export default function PlanForm({
                 )}
               </>
             )}
+          </div>
+        )}
+
+        {/* Sync data button (only in edit mode) */}
+        {mode === "edit" && initialData?.patientId && (
+          <div className="px-6 pt-4 pb-3 border-b border-gray-100 bg-blue/5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-foreground">Datos del paciente</p>
+                <p className="text-xs text-gray-400">Actualiza los campos con la información más reciente del perfil.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleSelectPatient(initialData.patientId)}
+                className="flex items-center gap-2 rounded-xl bg-blue/10 px-4 py-2 text-xs font-semibold text-blue hover:bg-blue/20 transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Sincronizar datos
+              </button>
+            </div>
           </div>
         )}
 

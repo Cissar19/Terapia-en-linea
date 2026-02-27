@@ -11,7 +11,14 @@ export default function PatientHeader({ patientName, patientEmail, profile }: Pa
   const initial = patientName[0]?.toUpperCase() || "P";
 
   const badges = [
-    profile?.age && { label: `${profile.age} anos`, color: "bg-blue/10 text-blue" },
+    profile?.birthDate && (() => {
+      const birth = new Date(profile.birthDate!);
+      const today = new Date();
+      let a = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) a--;
+      return { label: `${a} años`, color: "bg-blue/10 text-blue" };
+    })(),
     profile?.residenceCommune && { label: profile.residenceCommune, color: "bg-green/10 text-green" },
     profile?.education && { label: profile.education, color: "bg-yellow/10 text-yellow-700" },
     profile?.diagnoses && { label: profile.diagnoses, color: "bg-pink/10 text-pink" },

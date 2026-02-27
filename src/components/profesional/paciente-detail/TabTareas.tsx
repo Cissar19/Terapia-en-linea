@@ -119,6 +119,12 @@ export default function TabTareas({
   const completed = tasks.filter((t) => t.completed);
 
   function resetForm() {
+    // Revoke any blob URLs to free memory
+    pendingAttachments.forEach((att) => {
+      if (att.type === "file" && att.url.startsWith("blob:")) {
+        URL.revokeObjectURL(att.url);
+      }
+    });
     setTitle("");
     setDescription("");
     setPriority("");
@@ -163,8 +169,16 @@ export default function TabTareas({
 
   function removeAttachment(index: number, target: "create" | "edit") {
     if (target === "create") {
+      const removed = pendingAttachments[index];
+      if (removed?.type === "file" && removed.url.startsWith("blob:")) {
+        URL.revokeObjectURL(removed.url);
+      }
       setPendingAttachments((prev) => prev.filter((_, i) => i !== index));
     } else {
+      const removed = editAttachments[index];
+      if (removed?.type === "file" && removed.url.startsWith("blob:")) {
+        URL.revokeObjectURL(removed.url);
+      }
       setEditAttachments((prev) => prev.filter((_, i) => i !== index));
     }
   }
@@ -227,7 +241,7 @@ export default function TabTareas({
           professionalName,
           attachmentCount: uploadedAttachments.length || undefined,
         }),
-      }).catch(() => {});
+      }).catch(() => { });
 
       resetForm();
     } finally {
@@ -256,6 +270,12 @@ export default function TabTareas({
   }
 
   function cancelEdit() {
+    // Revoke blob URLs from edit attachments that aren't in the original task
+    editAttachments.forEach((att) => {
+      if (att.type === "file" && att.url.startsWith("blob:")) {
+        URL.revokeObjectURL(att.url);
+      }
+    });
     setEditingId(null);
     setEditAttachments([]);
     setShowEditDriveInput(false);
@@ -359,7 +379,7 @@ export default function TabTareas({
                 className="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-gray-200 p-4 text-gray-500 hover:border-blue hover:bg-blue/5 hover:text-blue transition-all cursor-pointer"
               >
                 <svg className="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z"/>
+                  <path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z" />
                 </svg>
                 <span className="text-sm font-semibold">Link de Drive</span>
               </button>
@@ -375,7 +395,7 @@ export default function TabTareas({
                 {editAttachments.map((att, i) => (
                   <div key={i} className={`flex items-center gap-3 rounded-xl px-4 py-3 ${att.type === "drive" ? "bg-blue/10" : "bg-gray-50"}`}>
                     {att.type === "drive" ? (
-                      <svg className="h-5 w-5 text-blue flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z"/></svg>
+                      <svg className="h-5 w-5 text-blue flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z" /></svg>
                     ) : (
                       <svg className="h-5 w-5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                     )}
@@ -411,9 +431,8 @@ export default function TabTareas({
       <div className={`flex items-start gap-3 p-4 rounded-xl ${task.completed ? "bg-green/5" : "bg-yellow/10"}`}>
         <button
           onClick={() => handleToggle(task.id, task.completed)}
-          className={`mt-0.5 h-5 w-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
-            task.completed ? "bg-green border-green" : "border-gray-300 hover:border-green"
-          }`}
+          className={`mt-0.5 h-5 w-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${task.completed ? "bg-green border-green" : "border-gray-300 hover:border-green"
+            }`}
         >
           {task.completed && (
             <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -446,14 +465,13 @@ export default function TabTareas({
                   href={att.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
-                    att.type === "drive"
+                  className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-colors ${att.type === "drive"
                       ? "bg-blue/10 text-blue hover:bg-blue/20"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   {att.type === "drive" ? (
-                    <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z"/></svg>
+                    <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z" /></svg>
                   ) : (
                     <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                   )}
@@ -547,7 +565,7 @@ export default function TabTareas({
                   className="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-gray-200 p-5 text-gray-500 hover:border-blue hover:bg-blue/5 hover:text-blue transition-all cursor-pointer"
                 >
                   <svg className="h-8 w-8" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z"/>
+                    <path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z" />
                   </svg>
                   <span className="text-sm font-semibold">Link de Google Drive</span>
                   <span className="text-xs text-gray-400">Pega un enlace compartido</span>
@@ -564,7 +582,7 @@ export default function TabTareas({
                   {pendingAttachments.map((att, i) => (
                     <div key={i} className={`flex items-center gap-3 rounded-xl px-4 py-3 ${att.type === "drive" ? "bg-blue/10" : "bg-gray-50"}`}>
                       {att.type === "drive" ? (
-                        <svg className="h-5 w-5 text-blue flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z"/></svg>
+                        <svg className="h-5 w-5 text-blue flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 5.98h6.56L4.58 9.48l3.13-5.98zm1.14 0l6.56 11.48H24l-3.43-5.98H11.98L8.85 3.5zm5.71 12.48L11.14 21h13.43l3.43-5.98-3.43-.04H14.56z" /></svg>
                       ) : (
                         <svg className="h-5 w-5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                       )}

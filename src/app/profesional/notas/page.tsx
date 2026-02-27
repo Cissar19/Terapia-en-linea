@@ -6,6 +6,8 @@ import { addClinicalNote } from "@/lib/firebase/firestore";
 import { useProfessionalNotes } from "@/hooks/useNotes";
 import { useProfessionalAppointments } from "@/hooks/useAppointments";
 import type { ClinicalNote, Appointment } from "@/lib/firebase/types";
+import { usePagination } from "@/hooks/usePagination";
+import Pagination from "@/components/Pagination";
 
 interface PatientOption {
   id: string;
@@ -84,6 +86,8 @@ export default function NotasProfesionalPage() {
   const filteredNotes = filterPatient
     ? notes.filter((n) => n.patientName === filterPatient)
     : notes;
+
+  const notesPag = usePagination(filteredNotes, 10);
 
   if (loading) {
     return (
@@ -230,7 +234,7 @@ export default function NotasProfesionalPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredNotes.map((n) => (
+          {notesPag.items.map((n) => (
             <div key={n.id} className="bg-white rounded-2xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -250,6 +254,16 @@ export default function NotasProfesionalPage() {
               <p className="text-sm text-gray-600 whitespace-pre-wrap">{n.content}</p>
             </div>
           ))}
+          <Pagination
+            page={notesPag.page}
+            totalPages={notesPag.totalPages}
+            totalItems={notesPag.totalItems}
+            hasNextPage={notesPag.hasNextPage}
+            hasPrevPage={notesPag.hasPrevPage}
+            onNext={notesPag.nextPage}
+            onPrev={notesPag.prevPage}
+            label="notas clinicas"
+          />
         </div>
       )}
     </div>

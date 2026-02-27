@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Appointment } from "@/lib/firebase/types";
+import { DEFAULT_DURATION } from "@/lib/services";
+import { useServices } from "@/contexts/ServicesContext";
 
 interface DailyTimelineProps {
   appointments: Appointment[];
@@ -13,12 +15,6 @@ const HOUR_HEIGHT = 64;
 const START_HOUR = 8;
 const END_HOUR = 20;
 const TOTAL_HOURS = END_HOUR - START_HOUR;
-
-const SERVICE_DURATIONS: Record<string, number> = {
-  "adaptacion-puesto": 60,
-  "atencion-temprana": 45,
-  "babysitting-terapeutico": 90,
-};
 
 const SERVICE_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   "adaptacion-puesto": {
@@ -53,6 +49,11 @@ function isSameDay(a: Date, b: Date) {
 }
 
 export default function DailyTimeline({ appointments, date, onComplete }: DailyTimelineProps) {
+  const { services } = useServices();
+  const durationMap = useMemo(
+    () => Object.fromEntries(services.map((s) => [s.slug, s.duration])),
+    [services]
+  );
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -95,9 +96,8 @@ export default function DailyTimeline({ appointments, date, onComplete }: DailyT
           {hours.map((hour, i) => (
             <div
               key={hour}
-              className={`absolute left-0 right-0 border-t border-gray-100 ${
-                i % 2 === 1 ? "bg-gray-50/30" : ""
-              }`}
+              className={`absolute left-0 right-0 border-t border-gray-100 ${i % 2 === 1 ? "bg-gray-50/30" : ""
+                }`}
               style={{ top: i * HOUR_HEIGHT, height: HOUR_HEIGHT }}
             />
           ))}
@@ -117,7 +117,7 @@ export default function DailyTimeline({ appointments, date, onComplete }: DailyT
           {appointments.map((apt) => {
             const aptDate = apt.date.toDate();
             const aptMinutes = aptDate.getHours() * 60 + aptDate.getMinutes();
-            const duration = SERVICE_DURATIONS[apt.serviceSlug] ?? 60;
+            const duration = durationMap[apt.serviceSlug] ?? DEFAULT_DURATION;
             const colors = SERVICE_COLORS[apt.serviceSlug] ?? DEFAULT_COLORS;
 
             const top = ((aptMinutes - startMinutes) / 60) * HOUR_HEIGHT;
@@ -131,13 +131,11 @@ export default function DailyTimeline({ appointments, date, onComplete }: DailyT
                 type="button"
                 disabled={!isConfirmed || !onComplete}
                 onClick={() => isConfirmed && onComplete?.(apt)}
-                className={`absolute left-1 right-2 z-10 rounded-lg border-l-4 px-3 py-1.5 text-left transition-all ${
-                  colors.bg
-                } ${colors.border} ${
-                  isConfirmed && onComplete
+                className={`absolute left-1 right-2 z-10 rounded-lg border-l-4 px-3 py-1.5 text-left transition-all ${colors.bg
+                  } ${colors.border} ${isConfirmed && onComplete
                     ? "cursor-pointer hover:shadow-md hover:scale-[1.01]"
                     : "cursor-default opacity-75"
-                }`}
+                  }`}
                 style={{ top, height: Math.max(height, 32) }}
               >
                 <p className={`text-[11px] font-bold ${colors.text} leading-tight`}>

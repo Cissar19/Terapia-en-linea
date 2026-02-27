@@ -12,6 +12,8 @@ import { useProfessionalAppointments } from "@/hooks/useAppointments";
 import type { Appointment, InterventionPlan } from "@/lib/firebase/types";
 import DailyTimeline from "@/components/profesional/DailyTimeline";
 import CompletionModal from "@/components/profesional/CompletionModal";
+import { usePagination } from "@/hooks/usePagination";
+import Pagination from "@/components/Pagination";
 
 const statusLabels: Record<string, string> = {
   confirmed: "Confirmada",
@@ -77,6 +79,13 @@ export default function CitasProfesionalPage() {
     setSubmitting(false);
   }
 
+  const confirmed = appointments.filter((a) => a.status === "confirmed");
+  const completedAll = appointments.filter((a) => a.status === "completed");
+  const cancelledAll = appointments.filter((a) => a.status === "cancelled");
+
+  const completedPag = usePagination(completedAll, 10);
+  const cancelledPag = usePagination(cancelledAll, 10);
+
   if (loading) {
     return (
       <div>
@@ -89,10 +98,6 @@ export default function CitasProfesionalPage() {
       </div>
     );
   }
-
-  const confirmed = appointments.filter((a) => a.status === "confirmed");
-  const completed = appointments.filter((a) => a.status === "completed");
-  const cancelled = appointments.filter((a) => a.status === "cancelled");
 
   const timelineAppointments = appointments.filter((a) => {
     if (a.status === "cancelled") return false;
@@ -168,21 +173,19 @@ export default function CitasProfesionalPage() {
         <div className="flex items-center gap-1 bg-gray-100 rounded-full p-1">
           <button
             onClick={() => setView("list")}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-              view === "list"
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${view === "list"
                 ? "bg-white text-foreground shadow-sm"
                 : "text-gray-500 hover:text-foreground"
-            }`}
+              }`}
           >
             Lista
           </button>
           <button
             onClick={() => setView("timeline")}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-              view === "timeline"
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${view === "timeline"
                 ? "bg-white text-foreground shadow-sm"
                 : "text-gray-500 hover:text-foreground"
-            }`}
+              }`}
           >
             Línea de Tiempo
           </button>
@@ -196,7 +199,7 @@ export default function CitasProfesionalPage() {
             onClick={() => shiftDate(-1)}
             className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-600"
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
           <div className="flex items-center gap-3">
             <button
@@ -217,7 +220,7 @@ export default function CitasProfesionalPage() {
             onClick={() => shiftDate(1)}
             className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-600"
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
         </div>
       )}
@@ -281,13 +284,13 @@ export default function CitasProfesionalPage() {
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-sm font-bold text-foreground">Completadas</h2>
-              <span className="text-xs text-gray-400">{completed.length}</span>
+              <span className="text-xs text-gray-400">{completedAll.length}</span>
             </div>
-            {completed.length === 0 ? (
+            {completedAll.length === 0 ? (
               <p className="px-6 py-8 text-center text-sm text-gray-400">No hay citas completadas.</p>
             ) : (
               <div>
-                {completed.map((a) => (
+                {completedPag.items.map((a) => (
                   <div key={a.id} className="flex items-center justify-between px-6 py-4 border-b border-gray-50 last:border-0">
                     <div className="flex items-center gap-4">
                       <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue/10 text-blue text-xs font-bold">
@@ -308,19 +311,31 @@ export default function CitasProfesionalPage() {
                     </div>
                   </div>
                 ))}
+                <div className="px-6 pb-4">
+                  <Pagination
+                    page={completedPag.page}
+                    totalPages={completedPag.totalPages}
+                    totalItems={completedPag.totalItems}
+                    hasNextPage={completedPag.hasNextPage}
+                    hasPrevPage={completedPag.hasPrevPage}
+                    onNext={completedPag.nextPage}
+                    onPrev={completedPag.prevPage}
+                    label="citas completadas"
+                  />
+                </div>
               </div>
             )}
           </div>
 
           {/* Cancelled */}
-          {cancelled.length > 0 && (
+          {cancelledAll.length > 0 && (
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="text-sm font-bold text-foreground">Canceladas</h2>
-                <span className="text-xs text-gray-400">{cancelled.length}</span>
+                <span className="text-xs text-gray-400">{cancelledAll.length}</span>
               </div>
               <div>
-                {cancelled.map((a) => (
+                {cancelledPag.items.map((a) => (
                   <div key={a.id} className="flex items-center justify-between px-6 py-4 border-b border-gray-50 last:border-0 opacity-60">
                     <div className="flex items-center gap-4">
                       <span className="flex h-10 w-10 items-center justify-center rounded-full bg-red/10 text-red text-xs font-bold">
@@ -341,6 +356,18 @@ export default function CitasProfesionalPage() {
                     </div>
                   </div>
                 ))}
+                <div className="px-6 pb-4">
+                  <Pagination
+                    page={cancelledPag.page}
+                    totalPages={cancelledPag.totalPages}
+                    totalItems={cancelledPag.totalItems}
+                    hasNextPage={cancelledPag.hasNextPage}
+                    hasPrevPage={cancelledPag.hasPrevPage}
+                    onNext={cancelledPag.nextPage}
+                    onPrev={cancelledPag.prevPage}
+                    label="citas canceladas"
+                  />
+                </div>
               </div>
             </div>
           )}
