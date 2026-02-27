@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert, type App } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 import { getAuth, type Auth } from "firebase-admin/auth";
+import { getStorage, type Storage } from "firebase-admin/storage";
 
 let _adminApp: App | undefined;
 let _adminDb: Firestore | undefined;
@@ -37,4 +38,13 @@ export function getAdminAuth(): Auth {
     _adminAuth = getAuth(getAdminApp());
   }
   return _adminAuth;
+}
+
+let _adminStorage: Storage | undefined;
+
+export function getAdminStorage(): Storage {
+  if (!_adminStorage) {
+    _adminStorage = getStorage(getAdminApp());
+  }
+  return _adminStorage;
 }

@@ -18,3 +18,7 @@ export async function deleteTaskAttachment(path: string): Promise<void> {
   const storageRef = ref(storage, path);
   await deleteObject(storageRef);
 }
+
+// ── Profile Photos (stored as base64 in Firestore) ──
+
+export { uploadProfilePhoto, deleteProfilePhoto } from "./profilePhoto";

@@ -27,6 +27,7 @@ import type {
   PatientTask,
   InterventionPlan,
   PlanStatus,
+  ServiceDoc,
 } from "./types";
 
 // ── Users ──
@@ -81,7 +82,7 @@ export async function updateUserRole(uid: string, role: UserRole): Promise<void>
 
 export async function updateUserProfile(
   uid: string,
-  data: Partial<Pick<UserProfile, "displayName" | "phone" | "age" | "residenceCommune" | "education" | "diagnoses" | "medications">>
+  data: Partial<Pick<UserProfile, "displayName" | "phone" | "photoURL" | "birthDate" | "residenceCommune" | "education" | "diagnoses" | "medications">>
 ): Promise<void> {
   const db = getFirebaseDb();
   await updateDoc(doc(db, "users", uid), {
@@ -270,15 +271,17 @@ export async function createAppointment(
 
 // ── Stats ──
 
-const SERVICE_PRICES: Record<string, number> = {
-  "adaptacion-puesto-trabajo": 45000,
-  "atencion-temprana": 40000,
-  "babysitting-terapeutico": 35000,
-};
-
 export async function getStats(): Promise<DashboardStats> {
   const db = getFirebaseDb();
   const appointmentsRef = collection(db, "appointments");
+
+  // Build slug→price map from services collection
+  const servicesSnap = await getDocs(collection(db, "services"));
+  const servicePrices: Record<string, number> = {};
+  for (const d of servicesSnap.docs) {
+    const data = d.data();
+    servicePrices[data.slug as string] = (data.price as number) || 0;
+  }
 
   const [usersSnap, confirmed, cancelled, completed] = await Promise.all([
     getCountFromServer(collection(db, "users")),
@@ -340,7 +343,7 @@ export async function getStats(): Promise<DashboardStats> {
     }
     // Revenue: non-cancelled appointments
     if (data.status !== "cancelled") {
-      revenueEstimate += SERVICE_PRICES[data.serviceSlug as string] || 0;
+      revenueEstimate += servicePrices[data.serviceSlug as string] || 0;
     }
   }
 
@@ -562,6 +565,76 @@ export function onNotesByProfessional(
       const results = snap.docs
         .map((d) => ({ id: d.id, ...d.data() }) as ClinicalNote)
         .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+      callback(results);
+    }
+  );
+}
+
+// ── Services CRUD ──
+
+export async function getAllServices(): Promise<ServiceDoc[]> {
+  const db = getFirebaseDb();
+  const snap = await getDocs(
+    query(collection(db, "services"), orderBy("order", "asc"))
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as ServiceDoc);
+}
+
+export async function getActiveServices(): Promise<ServiceDoc[]> {
+  const db = getFirebaseDb();
+  const snap = await getDocs(
+    query(
+      collection(db, "services"),
+      where("active", "==", true),
+      orderBy("order", "asc")
+    )
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as ServiceDoc);
+}
+
+export async function addService(
+  data: Omit<ServiceDoc, "id" | "createdAt" | "updatedAt">
+): Promise<string> {
+  const db = getFirebaseDb();
+  const now = Timestamp.now();
+  const docRef = await addDoc(collection(db, "services"), {
+    ...data,
+    createdAt: now,
+    updatedAt: now,
+  });
+  return docRef.id;
+}
+
+export async function updateService(
+  id: string,
+  data: Partial<Omit<ServiceDoc, "id" | "createdAt">>
+): Promise<void> {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, "services", id), {
+    ...data,
+    updatedAt: Timestamp.now(),
+  });
+}
+
+export async function deleteService(id: string): Promise<void> {
+  const db = getFirebaseDb();
+  await deleteDoc(doc(db, "services", id));
+}
+
+export function onActiveServices(
+  callback: (services: ServiceDoc[]) => void
+): Unsubscribe {
+  const db = getFirebaseDb();
+  return onSnapshot(
+    query(
+      collection(db, "services"),
+      where("active", "==", true),
+      orderBy("order", "asc")
+    ),
+    (snap) => {
+      const results = snap.docs.map(
+        (d) => ({ id: d.id, ...d.data() }) as ServiceDoc
+      );
       callback(results);
     }
   );

@@ -12,7 +12,7 @@ export interface UserProfile {
   calUsername?: string; // Cal.com username — required for professionals
   bio?: string;         // Short bio shown to patients in booking flow
   // Patient clinical data (filled by patient in their profile)
-  age?: string;
+  birthDate?: string | null;
   residenceCommune?: string;
   education?: string;
   diagnoses?: string;
@@ -100,6 +100,27 @@ export interface DashboardStats {
   revenueEstimate: number;
   monthlyData: MonthlyData[];
   recentAppointments: RecentAppointment[];
+}
+
+// ── Services ──
+
+export interface ServiceDoc {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  price: number;          // CLP, e.g. 45000
+  duration: number;       // minutes, e.g. 60
+  bg: string;             // color key: "green", "blue", "yellow", etc.
+  accent: string;         // accent color key
+  color: string;          // timeline/badge color key
+  features: string[];
+  calLink: string;        // Cal.com event-type slug, e.g. "adaptacion-puesto"
+  assignedProfessionalId: string | null;
+  active: boolean;
+  order: number;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export type PlanStatus = "active" | "completed" | "archived";
