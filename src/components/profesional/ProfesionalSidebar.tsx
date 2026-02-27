@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import ProfileAvatar from "@/components/ProfileAvatar";
 
 const navItems = [
   {
@@ -50,6 +51,15 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    label: "Mi Perfil",
+    href: "/profesional/perfil",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    ),
+  },
 ];
 
 interface Props {
@@ -81,10 +91,17 @@ export default function ProfesionalSidebar({ open, onClose }: Props) {
         </svg>
       </button>
 
-      <div className="p-6 border-b border-gray-100">
-        <p className="text-sm text-gray-500">Hola,</p>
-        <h2 className="text-lg font-black text-foreground">{firstName}</h2>
-        <p className="text-xs text-green font-semibold mt-1">Terapeuta Ocupacional</p>
+      <div className="p-6 border-b border-gray-100 flex items-center gap-3">
+        <ProfileAvatar
+          photoURL={profile?.photoURL}
+          displayName={profile?.displayName || ""}
+          size="sm"
+        />
+        <div>
+          <p className="text-sm text-gray-500">Hola,</p>
+          <h2 className="text-lg font-black text-foreground leading-tight">{firstName}</h2>
+          <p className="text-xs text-green font-semibold">Terapeuta Ocupacional</p>
+        </div>
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
@@ -99,8 +116,8 @@ export default function ProfesionalSidebar({ open, onClose }: Props) {
               href={item.href}
               onClick={onClose}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${active
-                  ? "bg-green/10 text-green"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-foreground"
+                ? "bg-green/10 text-green"
+                : "text-gray-600 hover:bg-gray-50 hover:text-foreground"
                 }`}
             >
               {item.icon}

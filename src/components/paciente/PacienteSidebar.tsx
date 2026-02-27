@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "@/lib/firebase/auth";
+import { useAuth } from "@/contexts/AuthContext";
+import ProfileAvatar from "@/components/ProfileAvatar";
 
 const navItems = [
   {
@@ -41,6 +44,7 @@ interface Props {
 export default function PacienteSidebar({ open, onClose }: Props) {
   const pathname = usePathname();
   const router = useRouter();
+  const { profile } = useAuth();
 
   function handleBooking() {
     onClose();
@@ -69,9 +73,16 @@ export default function PacienteSidebar({ open, onClose }: Props) {
         </svg>
       </button>
 
-      <div className="p-6 border-b border-gray-100">
-        <h2 className="text-lg font-black text-foreground">Mi Panel</h2>
-        <p className="text-xs text-gray-400 mt-1">Terapia en fácil</p>
+      <div className="p-6 border-b border-gray-100 flex items-center gap-3">
+        <ProfileAvatar
+          photoURL={profile?.photoURL}
+          displayName={profile?.displayName || ""}
+          size="sm"
+        />
+        <div>
+          <h2 className="text-lg font-black text-foreground leading-tight">Mi Panel</h2>
+          <p className="text-xs text-gray-400">Terapia en fácil</p>
+        </div>
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
@@ -85,11 +96,10 @@ export default function PacienteSidebar({ open, onClose }: Props) {
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                active
-                  ? "bg-pink/10 text-pink"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-foreground"
-              }`}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${active
+                ? "bg-pink/10 text-pink"
+                : "text-gray-600 hover:bg-gray-50 hover:text-foreground"
+                }`}
             >
               {item.icon}
               {item.label}
@@ -108,7 +118,20 @@ export default function PacienteSidebar({ open, onClose }: Props) {
         </button>
       </nav>
 
-      <div className="p-4 border-t border-gray-100">
+      <div className="p-4 border-t border-gray-100 space-y-1">
+        <button
+          onClick={async () => {
+            onClose();
+            await signOut();
+            router.push("/");
+          }}
+          className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-gray-500 hover:bg-red/5 hover:text-red transition-colors w-full"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Cerrar Sesión
+        </button>
         <Link
           href="/"
           onClick={onClose}
