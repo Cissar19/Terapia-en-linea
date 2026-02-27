@@ -1,35 +1,34 @@
-import { notFound } from "next/navigation";
-import type { Metadata } from "next";
-import { services, getServiceBySlug } from "@/lib/services";
+"use client";
+
+import { useParams, notFound } from "next/navigation";
+import { useMemo } from "react";
+import { toService } from "@/lib/services";
+import { useServices } from "@/contexts/ServicesContext";
 import Navbar from "@/components/Navbar";
 import BookingPage from "@/components/booking/BookingPage";
 import Footer from "@/components/Footer";
 
-interface PageProps {
-  params: Promise<{ slug: string }>;
-}
+export default function AgendarPage() {
+  const { slug } = useParams<{ slug: string }>();
+  const { services, loading, getBySlug } = useServices();
 
-export async function generateStaticParams() {
-  return services.map((s) => ({ slug: s.slug }));
-}
+  const doc = getBySlug(slug);
+  const service = useMemo(() => (doc ? toService(doc) : null), [doc]);
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const service = getServiceBySlug(slug);
-  if (!service) return {};
-
-  return {
-    title: `Agendar ${service.name} — Terapia en facil`,
-    description: `${service.description} ${service.price} por sesión de ${service.duration}.`,
-  };
-}
-
-export default async function AgendarPage({ params }: PageProps) {
-  const { slug } = await params;
-  const service = getServiceBySlug(slug);
-
-  if (!service) {
+  if (!loading && !doc) {
     notFound();
+  }
+
+  if (loading || !service) {
+    return (
+      <main className="overflow-hidden">
+        <Navbar />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-blue border-t-transparent rounded-full animate-spin" />
+        </div>
+        <Footer />
+      </main>
+    );
   }
 
   return (

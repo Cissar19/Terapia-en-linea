@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { services, type Service } from "@/lib/services";
+import { useEffect, useMemo, useState } from "react";
+import { toService, type Service } from "@/lib/services";
+import { useServices } from "@/contexts/ServicesContext";
 import type { UserProfile } from "@/lib/firebase/types";
 import { getAllProfessionals } from "@/lib/firebase/firestore";
 import BookingModal from "./BookingModal";
@@ -27,6 +28,8 @@ function Initials({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
 }
 
 export default function BookingWidget({ variant }: BookingWidgetProps) {
+  const { services: docs } = useServices();
+  const services = useMemo(() => docs.map((d) => toService(d)), [docs]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedPro, setSelectedPro] = useState<UserProfile | null>(null);
   const [professionals, setProfessionals] = useState<UserProfile[]>([]);

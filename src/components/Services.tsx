@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { services, type Service } from "@/lib/services";
+import { useMemo, useState } from "react";
+import { toService, type Service } from "@/lib/services";
+import { useServices } from "@/contexts/ServicesContext";
 import BookingModal from "@/components/booking/BookingModal";
 
 const cardStyles = [
@@ -41,7 +42,11 @@ const icons = [
 ];
 
 export default function Services() {
+  const { services: docs, loading } = useServices();
+  const services = useMemo(() => docs.map((d) => toService(d)), [docs]);
   const [activeService, setActiveService] = useState<Service | null>(null);
+
+  if (loading || services.length === 0) return null;
 
   return (
     <>

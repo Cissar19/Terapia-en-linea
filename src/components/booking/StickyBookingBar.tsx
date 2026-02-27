@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import BookingWidget from "./BookingWidget";
 import BookingModal from "./BookingModal";
-import { services } from "@/lib/services";
+import { toService } from "@/lib/services";
+import { useServices } from "@/contexts/ServicesContext";
 
 export default function StickyBookingBar() {
+  const { services: docs } = useServices();
+  const services = useMemo(() => docs.map((d) => toService(d)), [docs]);
   const [visible, setVisible] = useState(false);
   const [mobileModal, setMobileModal] = useState(false);
 
@@ -58,7 +61,7 @@ export default function StickyBookingBar() {
       </button>
 
       {/* Mobile modal fallback — opens with first service pre-selected */}
-      {mobileModal && (
+      {mobileModal && services[0] && (
         <BookingModal
           service={services[0]}
           onClose={() => setMobileModal(false)}
