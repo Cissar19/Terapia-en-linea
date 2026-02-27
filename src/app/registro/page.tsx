@@ -18,12 +18,14 @@ export default function RegistroPage() {
   const { user, loading } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     if (!loading && user) router.replace("/");
@@ -32,6 +34,16 @@ export default function RegistroPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setSuccess("");
+
+    // Validate Chilean phone if provided
+    if (phone.trim()) {
+      const phoneClean = phone.replace(/\s+/g, "");
+      if (!/^\+56[2-9]\d{7,8}$/.test(phoneClean)) {
+        setError("Teléfono inválido. Usa formato chileno: +56912345678");
+        return;
+      }
+    }
 
     if (password !== confirmPassword) {
       setError("Las contraseñas no coinciden.");
@@ -45,8 +57,20 @@ export default function RegistroPage() {
 
     setSubmitting(true);
     try {
-      await signUp(email, password, name);
-      router.push("/");
+      const { user: newUser } = await signUp(email, password, name);
+
+      // Send email verification
+      const { sendEmailVerification } = await import("firebase/auth");
+      await sendEmailVerification(newUser).catch(() => { });
+
+      // Save phone if provided
+      if (phone.trim()) {
+        const { updateUserProfile } = await import("@/lib/firebase/firestore");
+        await updateUserProfile(newUser.uid, { phone: phone.trim() });
+      }
+
+      setSuccess("¡Cuenta creada! Revisa tu correo para verificar tu email.");
+      setTimeout(() => router.push("/"), 2000);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code || "";
       setError(firebaseErrors[code] || "Error al crear la cuenta. Intenta de nuevo.");
@@ -99,6 +123,12 @@ export default function RegistroPage() {
             </div>
           )}
 
+          {success && (
+            <div className="rounded-xl bg-green/10 text-green text-sm p-4 mb-6">
+              {success}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1">
@@ -127,6 +157,20 @@ export default function RegistroPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue/30 focus:border-blue transition-colors"
                 placeholder="tu@correo.com"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-1">
+                Teléfono <span className="text-gray-400 font-normal">(opcional)</span>
+              </label>
+              <input
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue/30 focus:border-blue transition-colors"
+                placeholder="+56912345678"
               />
             </div>
 

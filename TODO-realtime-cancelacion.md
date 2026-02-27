@@ -61,15 +61,15 @@
 ---
 
 ## Pendientes generales (para despues)
-- [ ] Agregar "Mi Plan" al sidebar del paciente (`PacienteSidebar.tsx`)
-- [ ] Paginacion en listas de citas/notas/tareas
-- [ ] Validacion de telefono formato chileno (+56)
-- [ ] Verificacion de email al registrarse
-- [ ] Notificaciones cuando el profesional asigna tareas nuevas
-- [ ] Paciente pueda ver planes archivados (no solo el activo)
-- [ ] Manejo de errores visible al usuario (en vez de `.catch(() => [])`)
-- [ ] Verificar que webhook Cal.com efectivamente crea cita en Firestore
-- [ ] Cleanup de Blob URLs (`revokeObjectURL`) en uploads
-- [ ] Duraciones de servicio desde configuracion (no hardcodeadas en Timeline)
-- [ ] Boton de logout en el sidebar del paciente
-- [ ] Mejorar auto-fill del plan: boton "Sincronizar datos" en modo edicion
+- [x] Paginacion en listas de citas/notas/tareas
+- [x] Validacion de telefono formato chileno (+56)
+- [x] Verificacion de email al registrarse
+- [x] Notificaciones cuando el profesional asigna tareas nuevas
+- [x] Paciente pueda ver planes archivados (no solo el activo)
+- [x] Manejo de errores visible al usuario (en vez de `.catch(() => [])`)
+- [x] Verificar que webhook Cal.com efectivamente crea cita en Firestore
+- [x] Cleanup de Blob URLs (`revokeObjectURL`) en uploads
+- [x] Duraciones de servicio desde configuracion (no hardcodeadas en Timeline)
+- [x] Boton de logout en el sidebar del paciente
+- [x] Mejorar auto-fill del plan: boton "Sincronizar datos" en modo edicion
+
