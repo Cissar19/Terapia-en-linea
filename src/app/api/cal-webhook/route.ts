@@ -84,37 +84,34 @@ async function sendConfirmationEmails(
   const formattedDate = formatDate(dateStr);
 
   const patientHtml = `
-    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; padding: 40px 20px;">
-      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-        <div style="background-color: #4361EE; padding: 32px 24px; text-align: center;">
-          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">¡Cita Confirmada! 🎉</h1>
-        </div>
-        <div style="padding: 32px 24px;">
-          <p style="margin-top: 0; font-size: 16px; color: #374151; line-height: 1.5;">Hola <strong>${patientName}</strong>,</p>
-          <p style="font-size: 16px; color: #4B5563; line-height: 1.5;">Tu sesión ha sido agendada con éxito. Aquí tienes los detalles:</p>
-          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 15px;">
-              <tr>
-                <td style="padding-bottom: 12px; color: #64748b; width: 100px;">Servicio:</td>
-                <td style="padding-bottom: 12px; color: #0f172a; font-weight: 600;">${serviceName}</td>
-              </tr>
-              <tr>
-                <td style="padding-bottom: 12px; color: #64748b;">Especialista:</td>
-                <td style="padding-bottom: 12px; color: #0f172a; font-weight: 600;">${professionalName}</td>
-              </tr>
-              <tr>
-                <td style="color: #64748b;">Fecha y Hora:</td>
-                <td style="color: #0f172a; font-weight: 600;">${formattedDate}</td>
-              </tr>
-            </table>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fafafa; padding: 48px 20px;">
+      <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="padding: 40px 32px;">
+          <h1 style="color: #111827; margin: 0 0 8px 0; font-size: 20px; font-weight: 600; letter-spacing: -0.5px;">Cita confirmada</h1>
+          <p style="margin: 0 0 32px 0; font-size: 15px; color: #4b5563; line-height: 1.5;">Hola ${patientName}, tu sesión ha sido agendada con éxito.</p>
+          
+          <div style="background-color: #f9fafb; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+            <div style="margin-bottom: 16px;">
+              <p style="margin: 0; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Servicio</p>
+              <p style="margin: 4px 0 0 0; font-size: 16px; color: #111827; font-weight: 500;">${serviceName}</p>
+            </div>
+            <div style="margin-bottom: 16px;">
+              <p style="margin: 0; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Profesional</p>
+              <p style="margin: 4px 0 0 0; font-size: 16px; color: #111827;">${professionalName}</p>
+            </div>
+            <div>
+              <p style="margin: 0; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Fecha y Hora</p>
+              <p style="margin: 4px 0 0 0; font-size: 16px; color: #111827;">${formattedDate}</p>
+            </div>
           </div>
-          <p style="font-size: 14px; color: #64748b; line-height: 1.5; margin-bottom: 0;">
-            Recuerda que si necesitas reprogramar o cancelar, puedes hacerlo contactándonos directamente. ¡Nos vemos pronto!
+          
+          <p style="font-size: 14px; color: #6b7280; line-height: 1.6; margin: 0;">
+            Si necesitas reagendar o cancelar la cita, por favor contáctanos con anticipación. ¡Nos vemos pronto!
           </p>
         </div>
-        <div style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #e2e8f0;">
-          <p style="margin: 0; font-size: 13px; color: #94a3b8;">
-            © ${new Date().getFullYear()} Terapia en Fácil. Todos los derechos reservados.
+        <div style="background-color: #f9fafb; padding: 24px 32px; border-top: 1px solid #e5e7eb;">
+          <p style="margin: 0; font-size: 13px; color: #9ca3af; text-align: center;">
+            Terapia en Fácil
           </p>
         </div>
       </div>
@@ -122,33 +119,33 @@ async function sendConfirmationEmails(
   `;
 
   const professionalHtml = `
-    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; padding: 40px 20px;">
-      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-        <div style="background-color: #2DC653; padding: 32px 24px; text-align: center;">
-          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">Nueva Cita Agendada 🗓️</h1>
-        </div>
-        <div style="padding: 32px 24px;">
-          <p style="margin-top: 0; font-size: 16px; color: #374151; line-height: 1.5;">Hola <strong>${professionalName}</strong>,</p>
-          <p style="font-size: 16px; color: #4B5563; line-height: 1.5;">Tienes una nueva cita agendada en tu calendario:</p>
-          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 15px;">
-              <tr>
-                <td style="padding-bottom: 12px; color: #64748b; width: 100px;">Paciente:</td>
-                <td style="padding-bottom: 12px; color: #0f172a; font-weight: 600;">${patientName} <span style="color:#64748b;font-weight:normal;font-size:13px;">(${patientEmail})</span></td>
-              </tr>
-              <tr>
-                <td style="padding-bottom: 12px; color: #64748b;">Servicio:</td>
-                <td style="padding-bottom: 12px; color: #0f172a; font-weight: 600;">${serviceName}</td>
-              </tr>
-              <tr>
-                <td style="color: #64748b;">Fecha y Hora:</td>
-                <td style="color: #0f172a; font-weight: 600;">${formattedDate}</td>
-              </tr>
-            </table>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fafafa; padding: 48px 20px;">
+      <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="padding: 40px 32px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <h1 style="color: #111827; margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.5px;">Nueva cita</h1>
+            <span style="background-color: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500;">Confirmada</span>
+          </div>
+          <p style="margin: 0 0 32px 0; font-size: 15px; color: #4b5563; line-height: 1.5;">Hola ${professionalName}, tienes una nueva reserva.</p>
+          
+          <div style="background-color: #f9fafb; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+            <div style="margin-bottom: 16px;">
+              <p style="margin: 0; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Paciente</p>
+              <p style="margin: 4px 0 0 0; font-size: 16px; color: #111827; font-weight: 500;">${patientName}</p>
+              <p style="margin: 2px 0 0 0; font-size: 13px; color: #6b7280;">${patientEmail}</p>
+            </div>
+            <div style="margin-bottom: 16px;">
+              <p style="margin: 0; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Servicio</p>
+              <p style="margin: 4px 0 0 0; font-size: 16px; color: #111827;">${serviceName}</p>
+            </div>
+            <div>
+              <p style="margin: 0; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Fecha y Hora</p>
+              <p style="margin: 4px 0 0 0; font-size: 16px; color: #111827;">${formattedDate}</p>
+            </div>
           </div>
         </div>
-        <div style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #e2e8f0;">
-          <p style="margin: 0; font-size: 13px; color: #94a3b8;">
+        <div style="background-color: #f9fafb; padding: 24px 32px; border-top: 1px solid #e5e7eb;">
+          <p style="margin: 0; font-size: 13px; color: #9ca3af; text-align: center;">
             Terapia en Fácil
           </p>
         </div>
@@ -194,37 +191,34 @@ async function sendCancellationEmails(
   const formattedDate = formatDate(dateStr);
 
   const patientHtml = `
-    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; padding: 40px 20px;">
-      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-        <div style="background-color: #FF4757; padding: 32px 24px; text-align: center;">
-          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">Cita Cancelada ⚠️</h1>
-        </div>
-        <div style="padding: 32px 24px;">
-          <p style="margin-top: 0; font-size: 16px; color: #374151; line-height: 1.5;">Hola <strong>${patientName}</strong>,</p>
-          <p style="font-size: 16px; color: #4B5563; line-height: 1.5;">Te informamos que tu cita ha sido cancelada:</p>
-          <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 24px; margin: 24px 0;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 15px;">
-              <tr>
-                <td style="padding-bottom: 12px; color: #991b1b; width: 100px;">Servicio:</td>
-                <td style="padding-bottom: 12px; color: #7f1d1d; font-weight: 600;">${serviceName}</td>
-              </tr>
-              <tr>
-                <td style="padding-bottom: 12px; color: #991b1b;">Especialista:</td>
-                <td style="padding-bottom: 12px; color: #7f1d1d; font-weight: 600;">${professionalName}</td>
-              </tr>
-              <tr>
-                <td style="color: #991b1b;">Fecha y Hora:</td>
-                <td style="color: #7f1d1d; font-weight: 600;">${formattedDate}</td>
-              </tr>
-            </table>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fafafa; padding: 48px 20px;">
+      <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="padding: 40px 32px;">
+          <h1 style="color: #111827; margin: 0 0 8px 0; font-size: 20px; font-weight: 600; letter-spacing: -0.5px;">Cita cancelada</h1>
+          <p style="margin: 0 0 32px 0; font-size: 15px; color: #4b5563; line-height: 1.5;">Hola ${patientName}, te informamos que tu cita ha sido cancelada.</p>
+          
+          <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+            <div style="margin-bottom: 16px;">
+              <p style="margin: 0; font-size: 12px; font-weight: 600; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px;">Servicio</p>
+              <p style="margin: 4px 0 0 0; font-size: 16px; color: #7f1d1d; font-weight: 500;">${serviceName}</p>
+            </div>
+            <div style="margin-bottom: 16px;">
+              <p style="margin: 0; font-size: 12px; font-weight: 600; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px;">Profesional</p>
+              <p style="margin: 4px 0 0 0; font-size: 16px; color: #7f1d1d;">${professionalName}</p>
+            </div>
+            <div>
+              <p style="margin: 0; font-size: 12px; font-weight: 600; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px;">Fecha original</p>
+              <p style="margin: 4px 0 0 0; font-size: 16px; color: #7f1d1d;">${formattedDate}</p>
+            </div>
           </div>
-          <p style="font-size: 14px; color: #64748b; line-height: 1.5; margin-bottom: 0;">
-            Si deseas reagendar en otro momento, estaremos felices de atenderte. Visita nuestro sitio web cuando lo requieras.
+          
+          <p style="font-size: 14px; color: #6b7280; line-height: 1.6; margin: 0;">
+            Si deseas reagendar en otro momento, estaremos felices de atenderte desde nuestro sitio web.
           </p>
         </div>
-        <div style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #e2e8f0;">
-          <p style="margin: 0; font-size: 13px; color: #94a3b8;">
-            © ${new Date().getFullYear()} Terapia en Fácil. Todos los derechos reservados.
+        <div style="background-color: #f9fafb; padding: 24px 32px; border-top: 1px solid #e5e7eb;">
+          <p style="margin: 0; font-size: 13px; color: #9ca3af; text-align: center;">
+            Terapia en Fácil
           </p>
         </div>
       </div>
@@ -232,33 +226,33 @@ async function sendCancellationEmails(
   `;
 
   const professionalHtml = `
-    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; padding: 40px 20px;">
-      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-        <div style="background-color: #FF4757; padding: 32px 24px; text-align: center;">
-          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">Cita Cancelada ⚠️</h1>
-        </div>
-        <div style="padding: 32px 24px;">
-          <p style="margin-top: 0; font-size: 16px; color: #374151; line-height: 1.5;">Hola <strong>${professionalName}</strong>,</p>
-          <p style="font-size: 16px; color: #4B5563; line-height: 1.5;">Se ha cancelado la siguiente cita en tu calendario:</p>
-          <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 24px; margin: 24px 0;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 15px;">
-              <tr>
-                <td style="padding-bottom: 12px; color: #991b1b; width: 100px;">Paciente:</td>
-                <td style="padding-bottom: 12px; color: #7f1d1d; font-weight: 600;">${patientName} <span style="color:#b91c1c;font-weight:normal;font-size:13px;">(${patientEmail})</span></td>
-              </tr>
-              <tr>
-                <td style="padding-bottom: 12px; color: #991b1b;">Servicio:</td>
-                <td style="padding-bottom: 12px; color: #7f1d1d; font-weight: 600;">${serviceName}</td>
-              </tr>
-              <tr>
-                <td style="color: #991b1b;">Fecha y Hora:</td>
-                <td style="color: #7f1d1d; font-weight: 600;">${formattedDate}</td>
-              </tr>
-            </table>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fafafa; padding: 48px 20px;">
+      <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="padding: 40px 32px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <h1 style="color: #111827; margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.5px;">Cita cancelada</h1>
+            <span style="background-color: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500;">Cancelada</span>
+          </div>
+          <p style="margin: 0 0 32px 0; font-size: 15px; color: #4b5563; line-height: 1.5;">Hola ${professionalName}, se ha cancelado una cita en tu calendario.</p>
+          
+          <div style="background-color: #f9fafb; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+            <div style="margin-bottom: 16px;">
+              <p style="margin: 0; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Paciente</p>
+              <p style="margin: 4px 0 0 0; font-size: 16px; color: #111827; font-weight: 500;">${patientName}</p>
+              <p style="margin: 2px 0 0 0; font-size: 13px; color: #6b7280;">${patientEmail}</p>
+            </div>
+            <div style="margin-bottom: 16px;">
+              <p style="margin: 0; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Servicio</p>
+              <p style="margin: 4px 0 0 0; font-size: 16px; color: #111827;">${serviceName}</p>
+            </div>
+            <div>
+              <p style="margin: 0; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Fecha original</p>
+              <p style="margin: 4px 0 0 0; font-size: 16px; color: #111827;">${formattedDate}</p>
+            </div>
           </div>
         </div>
-        <div style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #e2e8f0;">
-          <p style="margin: 0; font-size: 13px; color: #94a3b8;">
+        <div style="background-color: #f9fafb; padding: 24px 32px; border-top: 1px solid #e5e7eb;">
+          <p style="margin: 0; font-size: 13px; color: #9ca3af; text-align: center;">
             Terapia en Fácil
           </p>
         </div>
