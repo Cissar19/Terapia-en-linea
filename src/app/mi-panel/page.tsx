@@ -316,22 +316,22 @@ export default function MiPanelPage() {
 
         {/* Stat cards */}
         <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="bg-blue/10 rounded-2xl p-4 text-center">
+          <Link href="/mi-panel/citas" className="bg-blue/10 rounded-2xl p-4 text-center hover:bg-blue/15 transition-colors cursor-pointer">
             <p className="text-3xl font-black text-blue">{animSessions}</p>
             <p className="text-xs font-semibold text-gray-500 mt-1">Sesiones</p>
-          </div>
-          <div className="bg-green/10 rounded-2xl p-4 text-center">
+          </Link>
+          <Link href="/mi-panel/tareas" className="bg-green/10 rounded-2xl p-4 text-center hover:bg-green/15 transition-colors cursor-pointer">
             <p className="text-3xl font-black text-green">
               {totalTasks > 0 ? `${animTaskPercent}%` : "\u2014"}
             </p>
             <p className="text-xs font-semibold text-gray-500 mt-1">Tareas</p>
-          </div>
-          <div className="bg-pink/10 rounded-2xl p-4 text-center">
+          </Link>
+          <Link href="/mi-panel/plan" className="bg-pink/10 rounded-2xl p-4 text-center hover:bg-pink/15 transition-colors cursor-pointer">
             <p className="text-3xl font-black text-pink">
               {daysInTreatment > 0 ? animDays : "\u2014"}
             </p>
             <p className="text-xs font-semibold text-gray-500 mt-1">Dias</p>
-          </div>
+          </Link>
         </div>
 
         {/* Session chart — last 6 months */}
@@ -488,8 +488,8 @@ export default function MiPanelPage() {
                           <p className="text-sm font-medium text-foreground">{t.title}</p>
                           {t.priority && (
                             <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${t.priority === "alta" ? "bg-red/10 text-red"
-                                : t.priority === "media" ? "bg-yellow/15 text-orange"
-                                  : "bg-green/10 text-green"
+                              : t.priority === "media" ? "bg-yellow/15 text-orange"
+                                : "bg-green/10 text-green"
                               }`}>
                               {t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}
                             </span>

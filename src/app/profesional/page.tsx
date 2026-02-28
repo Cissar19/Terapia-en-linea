@@ -81,11 +81,11 @@ export default function ProfesionalPage() {
   });
 
   const statCards = [
-    { label: "Citas Hoy", value: animTodayAppts, color: "green", borderColor: "border-l-green", bgIcon: "bg-green/10", textColor: "text-green", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /> },
-    { label: "Pacientes", value: animPatients, color: "blue", borderColor: "border-l-blue", bgIcon: "bg-blue/10", textColor: "text-blue", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /> },
-    { label: "Sesiones Completadas", value: animCompleted, color: "green", borderColor: "border-l-green", bgIcon: "bg-green/10", textColor: "text-green", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /> },
-    { label: "Planes Activos", value: animPlans, color: "pink", borderColor: "border-l-pink", bgIcon: "bg-pink/10", textColor: "text-pink", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /> },
-    { label: "Tareas Pendientes", value: animPendingTasks, color: "yellow", borderColor: "border-l-yellow", bgIcon: "bg-yellow/10", textColor: "text-yellow", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /> },
+    { label: "Citas Hoy", value: animTodayAppts, href: "/profesional/citas", borderColor: "border-l-green", bgIcon: "bg-green/10", textColor: "text-green", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /> },
+    { label: "Pacientes", value: animPatients, href: "/profesional/pacientes", borderColor: "border-l-blue", bgIcon: "bg-blue/10", textColor: "text-blue", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /> },
+    { label: "Sesiones Completadas", value: animCompleted, href: "/profesional/citas", borderColor: "border-l-green", bgIcon: "bg-green/10", textColor: "text-green", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /> },
+    { label: "Planes Activos", value: animPlans, href: "/profesional/planes", borderColor: "border-l-pink", bgIcon: "bg-pink/10", textColor: "text-pink", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /> },
+    { label: "Tareas Pendientes", value: animPendingTasks, href: "/profesional/pacientes", borderColor: "border-l-yellow", bgIcon: "bg-yellow/10", textColor: "text-yellow", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /> },
   ];
 
   const delayClasses = [
@@ -164,9 +164,10 @@ export default function ProfesionalPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         {statCards.map((card, i) => (
-          <div
+          <Link
             key={card.label}
-            className={`bg-white rounded-2xl p-5 shadow-sm border-l-4 ${card.borderColor} hover:shadow-md hover:-translate-y-1 transition-all duration-200 animate-fade-in-up ${delayClasses[i]}`}
+            href={card.href}
+            className={`bg-white rounded-2xl p-5 shadow-sm border-l-4 ${card.borderColor} hover:shadow-md hover:-translate-y-1 transition-all duration-200 animate-fade-in-up ${delayClasses[i]} cursor-pointer`}
           >
             <div className="flex items-center gap-3">
               <div className={`h-10 w-10 rounded-xl ${card.bgIcon} flex items-center justify-center flex-shrink-0`}>
@@ -179,7 +180,7 @@ export default function ProfesionalPage() {
                 <p className={`text-2xl font-black ${card.textColor}`}>{card.value}</p>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
