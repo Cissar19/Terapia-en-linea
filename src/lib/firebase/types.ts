@@ -41,6 +41,15 @@ export interface Appointment {
   cancelledBy?: string;
 }
 
+export type NoteType = "sesion" | "evaluacion" | "seguimiento" | "alta";
+
+export const NOTE_TYPE_LABELS: Record<NoteType, string> = {
+  sesion: "Sesión",
+  evaluacion: "Evaluación",
+  seguimiento: "Seguimiento",
+  alta: "Alta",
+};
+
 export interface ClinicalNote {
   id: string;
   appointmentId: string;
@@ -48,6 +57,8 @@ export interface ClinicalNote {
   patientId: string;
   patientName: string;
   content: string;
+  type?: NoteType;
+  updatedAt?: Timestamp;
   createdAt: Timestamp;
 }
 
@@ -71,8 +82,26 @@ export interface PatientTask {
   priority?: TaskPriority;
   dueDate?: Timestamp | null;
   attachments?: TaskAttachment[];
+  templateId?: string;   // referencia al template de origen (opcional)
+  category?: string;     // copiado del template al asignar
   createdAt: Timestamp;
   updatedAt?: Timestamp;
+}
+
+// ── Task Templates ──
+
+export interface TaskTemplate {
+  id: string;
+  professionalId: string;
+  title: string;
+  description: string;
+  category: string;            // string libre: "AVD", "Motricidad", etc.
+  priority?: TaskPriority;
+  defaultDueDays?: number;     // días desde hoy al asignar (undefined = sin fecha)
+  attachments?: TaskAttachment[];
+  usageCount: number;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface MonthlyData {

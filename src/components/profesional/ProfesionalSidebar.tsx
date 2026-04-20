@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileAvatar from "@/components/ProfileAvatar";
+import { useProfessionalTasks } from "@/hooks/useTasks";
 
 const navItems = [
   {
@@ -30,6 +31,24 @@ const navItems = [
     icon: (
       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Tareas",
+    href: "/profesional/tareas",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+      </svg>
+    ),
+  },
+  {
+    label: "Plantillas",
+    href: "/profesional/tareas/plantillas",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
       </svg>
     ),
   },
@@ -69,7 +88,9 @@ interface Props {
 
 export default function ProfesionalSidebar({ open, onClose }: Props) {
   const pathname = usePathname();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
+  const { data: tasks } = useProfessionalTasks(user?.uid);
+  const pendingTaskCount = tasks.filter((t) => !t.completed).length;
 
   const firstName = profile?.displayName?.split(" ")[0] || "Profesional";
 
@@ -121,7 +142,12 @@ export default function ProfesionalSidebar({ open, onClose }: Props) {
                 }`}
             >
               {item.icon}
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.href === "/profesional/tareas" && pendingTaskCount > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-yellow px-1.5 text-[10px] font-black text-foreground">
+                  {pendingTaskCount > 99 ? "99+" : pendingTaskCount}
+                </span>
+              )}
             </Link>
           );
         })}

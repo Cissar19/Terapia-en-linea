@@ -3,6 +3,8 @@
 import { useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePagination } from "@/hooks/usePagination";
+import Pagination from "@/components/Pagination";
 import {
   addClinicalNote,
   addPatientTask,
@@ -55,6 +57,8 @@ export default function PacientesPage() {
     });
     return Array.from(patientMap.values());
   }, [appointmentsData]);
+
+  const patientsPag = usePagination(patients, 10);
 
   const [expandedPatient, setExpandedPatient] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"notas" | "tareas">("notas");
@@ -191,7 +195,7 @@ export default function PacientesPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {patients.map((p) => {
+          {patientsPag.items.map((p) => {
             const isExpanded = expandedPatient === p.id;
             const patientNotes = notes.filter((n) => n.patientId === p.id);
             const patientTasks = tasks.filter((t) => t.patientId === p.id);
@@ -523,6 +527,16 @@ export default function PacientesPage() {
               </div>
             );
           })}
+          <Pagination
+            page={patientsPag.page}
+            totalPages={patientsPag.totalPages}
+            totalItems={patientsPag.totalItems}
+            hasNextPage={patientsPag.hasNextPage}
+            hasPrevPage={patientsPag.hasPrevPage}
+            onNext={patientsPag.nextPage}
+            onPrev={patientsPag.prevPage}
+            label="pacientes"
+          />
         </div>
       )}
     </div>

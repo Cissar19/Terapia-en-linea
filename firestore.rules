@@ -81,6 +81,14 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
 
+    // Task Templates: solo el profesional que los creó puede leer/escribir
+    match /task_templates/{templateId} {
+      allow read, create: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "profesional";
+      allow update, delete: if request.auth != null &&
+        resource.data.professionalId == request.auth.uid;
+    }
+
     // Intervention Plans: profesional CRUD, paciente lee los suyos, admin lee todos
     match /intervention_plans/{planId} {
       allow read: if request.auth != null && (

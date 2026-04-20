@@ -68,6 +68,14 @@ export default function PatientDetailPage() {
     setNotes((prev) => [note, ...prev]);
   }, []);
 
+  const handleNoteUpdated = useCallback((note: ClinicalNote) => {
+    setNotes((prev) => prev.map((n) => (n.id === note.id ? note : n)));
+  }, []);
+
+  const handleNoteDeleted = useCallback((noteId: string) => {
+    setNotes((prev) => prev.filter((n) => n.id !== noteId));
+  }, []);
+
   const handleTaskAdded = useCallback((task: PatientTask) => {
     setTasks((prev) => [task, ...prev]);
   }, []);
@@ -161,6 +169,8 @@ export default function PatientDetailPage() {
           patientName={patientName}
           professionalId={user!.uid}
           onNoteAdded={handleNoteAdded}
+          onNoteUpdated={handleNoteUpdated}
+          onNoteDeleted={handleNoteDeleted}
         />
       )}
 

@@ -11,6 +11,7 @@ import {
   where,
   orderBy,
   Timestamp,
+  increment,
   getCountFromServer,
   onSnapshot,
   type Unsubscribe,
@@ -28,6 +29,7 @@ import type {
   InterventionPlan,
   PlanStatus,
   ServiceDoc,
+  TaskTemplate,
 } from "./types";
 
 // ── Users ──
@@ -148,6 +150,22 @@ export async function addClinicalNote(
   return docRef.id;
 }
 
+export async function updateClinicalNote(
+  id: string,
+  data: Partial<Pick<ClinicalNote, "content" | "type">>
+): Promise<void> {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, "clinical_notes", id), {
+    ...data,
+    updatedAt: Timestamp.now(),
+  });
+}
+
+export async function deleteClinicalNote(id: string): Promise<void> {
+  const db = getFirebaseDb();
+  await deleteDoc(doc(db, "clinical_notes", id));
+}
+
 export async function getNotesByProfessional(uid: string): Promise<ClinicalNote[]> {
   const db = getFirebaseDb();
   const snap = await getDocs(
@@ -187,6 +205,12 @@ export async function addPatientTask(
     createdAt: now,
     updatedAt: now,
   });
+  // Increment template usage counter if task comes from a template
+  if (data.templateId) {
+    updateDoc(doc(db, "task_templates", data.templateId), {
+      usageCount: increment(1),
+    }).catch(() => {});
+  }
   return docRef.id;
 }
 
@@ -635,6 +659,57 @@ export function onActiveServices(
       const results = snap.docs.map(
         (d) => ({ id: d.id, ...d.data() }) as ServiceDoc
       );
+      callback(results);
+    }
+  );
+}
+
+// ── Task Templates ──
+
+export async function addTaskTemplate(
+  data: Omit<TaskTemplate, "id" | "createdAt" | "updatedAt" | "usageCount">
+): Promise<string> {
+  const db = getFirebaseDb();
+  const now = Timestamp.now();
+  const docRef = await addDoc(collection(db, "task_templates"), {
+    ...data,
+    usageCount: 0,
+    createdAt: now,
+    updatedAt: now,
+  });
+  return docRef.id;
+}
+
+export async function updateTaskTemplate(
+  id: string,
+  data: Partial<Omit<TaskTemplate, "id" | "createdAt" | "usageCount">>
+): Promise<void> {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, "task_templates", id), {
+    ...data,
+    updatedAt: Timestamp.now(),
+  });
+}
+
+export async function deleteTaskTemplate(id: string): Promise<void> {
+  const db = getFirebaseDb();
+  await deleteDoc(doc(db, "task_templates", id));
+}
+
+export function onTaskTemplatesByProfessional(
+  uid: string,
+  callback: (templates: TaskTemplate[]) => void
+): Unsubscribe {
+  const db = getFirebaseDb();
+  return onSnapshot(
+    query(
+      collection(db, "task_templates"),
+      where("professionalId", "==", uid)
+    ),
+    (snap) => {
+      const results = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }) as TaskTemplate)
+        .sort((a, b) => b.usageCount - a.usageCount || b.createdAt.toMillis() - a.createdAt.toMillis());
       callback(results);
     }
   );

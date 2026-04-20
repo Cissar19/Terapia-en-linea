@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toggleTaskCompleted } from "@/lib/firebase/firestore";
 import { usePatientTasks } from "@/hooks/useTasks";
+import MarkdownContent from "@/components/MarkdownContent";
 import type { PatientTask } from "@/lib/firebase/types";
 
 type Filter = "all" | "pending" | "completed";
@@ -195,9 +196,10 @@ export default function TareasPage() {
                     )}
                   </div>
                   {t.description && (
-                    <p className={`text-xs mt-1 ${t.completed ? "text-gray-300" : "text-gray-500"}`}>
-                      {t.description}
-                    </p>
+                    <MarkdownContent
+                      content={t.description}
+                      className={`text-xs mt-1 ${t.completed ? "text-gray-300" : "text-gray-500"}`}
+                    />
                   )}
                   <div className="flex items-center gap-3 mt-2 flex-wrap">
                     <span className="text-[10px] text-gray-400">

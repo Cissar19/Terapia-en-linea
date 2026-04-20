@@ -85,7 +85,7 @@ export default function ProfesionalPage() {
     { label: "Pacientes", value: animPatients, href: "/profesional/pacientes", borderColor: "border-l-blue", bgIcon: "bg-blue/10", textColor: "text-blue", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /> },
     { label: "Sesiones Completadas", value: animCompleted, href: "/profesional/citas", borderColor: "border-l-green", bgIcon: "bg-green/10", textColor: "text-green", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /> },
     { label: "Planes Activos", value: animPlans, href: "/profesional/planes", borderColor: "border-l-pink", bgIcon: "bg-pink/10", textColor: "text-pink", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /> },
-    { label: "Tareas Pendientes", value: animPendingTasks, href: "/profesional/pacientes", borderColor: "border-l-yellow", bgIcon: "bg-yellow/10", textColor: "text-yellow", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /> },
+    { label: "Tareas Pendientes", value: animPendingTasks, href: "/profesional/tareas", borderColor: "border-l-yellow", bgIcon: "bg-yellow/10", textColor: "text-yellow", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /> },
   ];
 
   const delayClasses = [
@@ -314,7 +314,7 @@ export default function ProfesionalPage() {
       <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 hover:shadow-md transition-shadow animate-fade-in-up animation-delay-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-foreground">Tareas Pendientes</h2>
-          <Link href="/profesional/pacientes" className="text-sm text-blue hover:underline font-medium">
+          <Link href="/profesional/tareas" className="text-sm text-blue hover:underline font-medium">
             Ver todas
           </Link>
         </div>

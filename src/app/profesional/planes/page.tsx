@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import { usePagination } from "@/hooks/usePagination";
+import Pagination from "@/components/Pagination";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   addInterventionPlan,
@@ -92,6 +94,8 @@ export default function PlanesPage() {
       return true;
     });
   }, [plans, search, statusFilter]);
+
+  const plansPag = usePagination(filteredPlans, 12);
 
   function showSuccess(msg: string) {
     setSuccessMsg(msg);
@@ -247,15 +251,29 @@ export default function PlanesPage() {
           <p className="text-gray-400">No se encontraron planes con los filtros seleccionados.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredPlans.map((plan) => (
-            <PlanCard
-              key={plan.id}
-              plan={plan}
-              onClick={() => { setSelectedPlan(plan); setView("detail"); }}
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {plansPag.items.map((plan) => (
+              <PlanCard
+                key={plan.id}
+                plan={plan}
+                onClick={() => { setSelectedPlan(plan); setView("detail"); }}
+              />
+            ))}
+          </div>
+          <div className="mt-4">
+            <Pagination
+              page={plansPag.page}
+              totalPages={plansPag.totalPages}
+              totalItems={plansPag.totalItems}
+              hasNextPage={plansPag.hasNextPage}
+              hasPrevPage={plansPag.hasPrevPage}
+              onNext={plansPag.nextPage}
+              onPrev={plansPag.prevPage}
+              label="planes"
             />
-          ))}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

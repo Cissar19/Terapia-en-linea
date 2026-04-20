@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Timestamp } from "firebase/firestore";
 import { addPatientTask, toggleTaskCompleted, updatePatientTask, deletePatientTask } from "@/lib/firebase/firestore";
 import { uploadTaskAttachment } from "@/lib/firebase/storage";
+import { useProfessionalTemplates } from "@/hooks/useTaskTemplates";
+import RichTextarea from "@/components/RichTextarea";
+import MarkdownContent from "@/components/MarkdownContent";
 import type { PatientTask, TaskPriority, TaskAttachment } from "@/lib/firebase/types";
 
 interface TabTareasProps {
@@ -92,6 +95,31 @@ export default function TabTareas({
   onTaskUpdated,
   onTaskDeleted,
 }: TabTareasProps) {
+  const { data: templates } = useProfessionalTemplates(professionalId);
+
+  // Template picker state
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [templateCategoryFilter, setTemplateCategoryFilter] = useState("Todas");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>(undefined);
+  const [selectedTemplateCategory, setSelectedTemplateCategory] = useState<string | undefined>(undefined);
+
+  const templateCategories = useMemo(
+    () => Array.from(new Set(templates.map((t) => t.category).filter(Boolean))).sort(),
+    [templates]
+  );
+
+  const filteredTemplates = useMemo(() => {
+    return templates.filter((t) => {
+      const matchCat = templateCategoryFilter === "Todas" || t.category === templateCategoryFilter;
+      const matchSearch =
+        !templateSearch ||
+        t.title.toLowerCase().includes(templateSearch.toLowerCase()) ||
+        t.category.toLowerCase().includes(templateSearch.toLowerCase());
+      return matchCat && matchSearch;
+    });
+  }, [templates, templateCategoryFilter, templateSearch]);
+
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -118,6 +146,26 @@ export default function TabTareas({
   const pending = tasks.filter((t) => !t.completed);
   const completed = tasks.filter((t) => t.completed);
 
+  function applyTemplate(templateId: string) {
+    const t = templates.find((t) => t.id === templateId);
+    if (!t) return;
+    setTitle(t.title);
+    setDescription(t.description);
+    setPriority(t.priority || "");
+    if (t.defaultDueDays != null) {
+      const d = new Date();
+      d.setDate(d.getDate() + t.defaultDueDays);
+      setDueDate(d.toISOString().split("T")[0]);
+    } else {
+      setDueDate("");
+    }
+    setPendingAttachments(t.attachments ? t.attachments.filter((a) => a.type === "drive") : []);
+    setSelectedTemplateId(t.id);
+    setSelectedTemplateCategory(t.category);
+    setShowTemplatePicker(false);
+    setShowForm(true);
+  }
+
   function resetForm() {
     // Revoke any blob URLs to free memory
     pendingAttachments.forEach((att) => {
@@ -133,6 +181,8 @@ export default function TabTareas({
     setDriveUrl("");
     setShowDriveInput(false);
     setShowForm(false);
+    setSelectedTemplateId(undefined);
+    setSelectedTemplateCategory(undefined);
   }
 
   function handleFileSelect(files: FileList | null, target: "create" | "edit") {
@@ -197,6 +247,8 @@ export default function TabTareas({
       };
       if (priority) taskData.priority = priority;
       if (dueDate) taskData.dueDate = Timestamp.fromDate(new Date(dueDate + "T23:59:59"));
+      if (selectedTemplateId) taskData.templateId = selectedTemplateId;
+      if (selectedTemplateCategory) taskData.category = selectedTemplateCategory;
 
       const id = await addPatientTask(taskData);
 
@@ -342,12 +394,11 @@ export default function TabTareas({
             onChange={(e) => setEditTitle(e.target.value)}
             className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green/30"
           />
-          <input
-            type="text"
+          <RichTextarea
             value={editDescription}
-            onChange={(e) => setEditDescription(e.target.value)}
-            placeholder="Descripcion (opcional)"
-            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green/30"
+            onChange={setEditDescription}
+            placeholder="Descripción (opcional)"
+            minRows={3}
           />
           <div className="flex flex-wrap items-center gap-3">
             <PrioritySelector value={editPriority} onChange={setEditPriority} />
@@ -448,7 +499,7 @@ export default function TabTareas({
             <PriorityBadge priority={task.priority} />
           </div>
           {task.description && (
-            <p className="text-xs text-gray-500 mt-0.5">{task.description}</p>
+            <MarkdownContent content={task.description} className="text-xs text-gray-500 mt-0.5" />
           )}
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <p className="text-[10px] text-gray-400">
@@ -513,6 +564,14 @@ export default function TabTareas({
       {/* Add task */}
       {showForm ? (
         <div className="bg-white rounded-2xl shadow-sm p-6">
+          {selectedTemplateId && (
+            <div className="flex items-center gap-2 mb-3 rounded-xl bg-blue/5 border border-blue/10 px-3 py-2">
+              <svg className="h-4 w-4 text-blue flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <span className="text-xs text-blue font-medium">Desde plantilla — puedes editar antes de guardar</span>
+            </div>
+          )}
           <div className="space-y-3">
             <input
               type="text"
@@ -521,12 +580,11 @@ export default function TabTareas({
               placeholder="Titulo de la tarea..."
               className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green/30"
             />
-            <input
-              type="text"
+            <RichTextarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descripcion o instrucciones (opcional)"
-              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green/30"
+              onChange={setDescription}
+              placeholder="Descripción o instrucciones (opcional)"
+              minRows={3}
             />
             <div className="flex flex-wrap items-center gap-3">
               <div>
@@ -613,12 +671,113 @@ export default function TabTareas({
           </div>
         </div>
       ) : (
-        <button
-          onClick={() => setShowForm(true)}
-          className="w-full rounded-2xl border-2 border-dashed border-gray-200 p-4 text-sm font-medium text-gray-400 hover:border-yellow hover:text-yellow-700 transition-colors"
-        >
-          + Nueva Tarea
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex-1 rounded-2xl border-2 border-dashed border-gray-200 p-4 text-sm font-medium text-gray-400 hover:border-yellow hover:text-yellow-700 transition-colors"
+          >
+            + Nueva tarea
+          </button>
+          {templates.length > 0 && (
+            <button
+              onClick={() => { setTemplateSearch(""); setTemplateCategoryFilter("Todas"); setShowTemplatePicker(true); }}
+              className="flex items-center gap-1.5 rounded-2xl border-2 border-dashed border-blue/30 px-4 py-4 text-sm font-medium text-blue hover:border-blue hover:bg-blue/5 transition-colors whitespace-nowrap"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              Desde plantilla
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Template picker modal */}
+      {showTemplatePicker && (
+        <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowTemplatePicker(false)} />
+          <div className="relative w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 flex-shrink-0">
+              <h2 className="text-base font-bold text-foreground">Elegir plantilla</h2>
+              <button onClick={() => setShowTemplatePicker(false)} className="p-2 rounded-full hover:bg-gray-100 text-gray-400">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Search + category filter */}
+            <div className="px-6 py-3 border-b border-gray-100 flex-shrink-0 space-y-2">
+              <input
+                type="text"
+                value={templateSearch}
+                onChange={(e) => setTemplateSearch(e.target.value)}
+                placeholder="Buscar plantilla..."
+                className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue/30"
+                autoFocus
+              />
+              {templateCategories.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {["Todas", ...templateCategories].map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setTemplateCategoryFilter(cat)}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+                        templateCategoryFilter === cat
+                          ? "bg-foreground text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Template list */}
+            <div className="overflow-y-auto flex-1 p-4 space-y-2">
+              {filteredTemplates.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-6">Sin plantillas.</p>
+              ) : (
+                filteredTemplates.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => applyTemplate(t.id)}
+                    className="w-full text-left rounded-2xl bg-lavender-light/60 hover:bg-lavender-light p-4 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">{t.title}</p>
+                        {t.description && (
+                          <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{t.description}</p>
+                        )}
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="text-[10px] font-bold text-foreground/60 uppercase tracking-wide">{t.category}</span>
+                          {t.priority && (
+                            <span className={`text-[10px] font-semibold ${PRIORITY_CONFIG[t.priority].text}`}>
+                              {PRIORITY_CONFIG[t.priority].label}
+                            </span>
+                          )}
+                          {t.defaultDueDays != null && (
+                            <span className="text-[10px] text-gray-400">{t.defaultDueDays}d</span>
+                          )}
+                          {t.usageCount > 0 && (
+                            <span className="text-[10px] text-gray-400">×{t.usageCount}</span>
+                          )}
+                        </div>
+                      </div>
+                      <svg className="h-4 w-4 text-gray-300 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Tasks list */}
