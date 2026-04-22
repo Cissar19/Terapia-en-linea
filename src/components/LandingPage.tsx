@@ -4,7 +4,6 @@ import StickyBookingBar from "@/components/booking/StickyBookingBar";
 import BuiltDifferent from "@/components/BuiltDifferent";
 import AlertSigns from "@/components/AlertSigns";
 import Specialist from "@/components/Specialist";
-import VideoReel from "@/components/VideoReel";
 import DividerArt from "@/components/DividerArt";
 import DevelopmentWindow from "@/components/DevelopmentWindow";
 import InactionCost from "@/components/InactionCost";
@@ -33,8 +32,6 @@ export default function LandingPage() {
       <InactionCost />
       {/* 4. Generar confianza — Bárbara antes que los precios */}
       <Specialist />
-      {/* 3. Prueba social en video */}
-      <VideoReel />
       {/* 4. Mostrar la transformación */}
       <DividerArt />
       {/* 5. Urgencia basada en evidencia: ventana de neurodesarrollo */}

@@ -22,7 +22,7 @@ export default function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Consultar por WhatsApp"
-      className={`fixed bottom-28 md:bottom-8 left-4 md:left-8 z-[60] group flex items-center gap-3 rounded-full bg-[#25D366] text-white shadow-lg px-4 py-3 hover:shadow-xl hover:scale-105 transition-all duration-500 ${
+      className={`hidden md:flex fixed bottom-8 left-8 z-[60] items-center gap-3 rounded-full bg-[#25D366] text-white shadow-lg px-4 py-3 hover:shadow-xl hover:scale-105 transition-all duration-500 ${
         visible
           ? "opacity-100 translate-y-0"
           : "opacity-0 translate-y-4 pointer-events-none"

@@ -1,187 +1,148 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// EDITAR AQUÍ — Agrega o quita fotos y videos.
-// El primer item es siempre el principal (el más grande).
-//
-// Con 1 item  → portrait centrado con badges flotantes.
-// Con 2 items → portrait grande izquierda + cuadrado derecha.
-// Con 3 items → portrait grande izquierda + 2 cuadrados apilados derecha (bento).
-//
-// Tipos disponibles:
-//   { type: "image", src: "/ruta.jpg", alt: "descripción" }
-//   { type: "video", src: "/videos/clip.mp4", label: "Texto overlay", href: "https://..." }
-// ─────────────────────────────────────────────────────────────────────────────
-
-type ImageItem = { type: "image"; src: string; alt: string };
-type VideoItem = { type: "video"; src: string; label: string; href: string };
-type MediaItem = ImageItem | VideoItem;
-
-const mediaItems: MediaItem[] = [
-  {
-    type: "image",
-    src: "/barbara.jpg",
-    alt: "Bárbara Alarcón Villafaña — Terapeuta Ocupacional",
-  },
-  // ── Descomenta para agregar una segunda foto: ──────────────────────────────
-  { type: "image", src: "/barbara-2.jpg", alt: "Bárbara trabajando con un niño" },
-  //
-  // ── Descomenta para agregar un video (muestra preview en loop): ───────────
-  // { type: "video", src: "/videos/preview1.mp4", label: "Así trabajo", href: "https://www.instagram.com/to.barbaraalarconv/" },
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-const badges = [
-  { label: "U. Mayor",        bg: "bg-green", pos: "absolute -top-3 -right-4 animate-float"         },
-  { label: "Neurodesarrollo", bg: "bg-pink",  pos: "absolute -bottom-3 -left-4 animate-float-delayed" },
-  { label: "Infanto-juvenil", bg: "bg-blue",  pos: "absolute top-1/2 -right-6 animate-float-slow"   },
-];
-
-function Slot({ item }: { item: MediaItem }) {
-  if (item.type === "image") {
-    return (
-      <Image
-        src={item.src}
-        alt={item.alt}
-        fill
-        className="object-cover object-top"
-        sizes="(max-width: 768px) 100vw, 320px"
-      />
-    );
-  }
-  return (
-    <a href={item.href} target="_blank" rel="noopener noreferrer" className="relative block w-full h-full">
-      <video src={item.src} className="w-full h-full object-cover" autoPlay muted loop playsInline />
-      <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center gap-2">
-        <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-          <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-        </div>
-        <span className="text-white text-xs font-semibold px-3 py-1 rounded-full bg-black/30">
-          {item.label}
-        </span>
-      </div>
-    </a>
-  );
+interface VideoItem {
+  id: string;
+  title: string;
+  preview: string;
+  video: string;
 }
 
-function MediaGrid({ items }: { items: MediaItem[] }) {
-  if (items.length === 0) return null;
+const videos: VideoItem[] = [
+  { id: "1", title: "Cómo trabajamos en casa",      preview: "/videos/preview1.mp4", video: "/videos/video1.mp4" },
+  { id: "2", title: "Sesión de alimentación",        preview: "/videos/preview2.mp4", video: "/videos/video2.mp4" },
+  { id: "3", title: "Atención temprana en acción",   preview: "/videos/preview3.mp4", video: "/videos/video3.mp4" },
+  { id: "4", title: "Tips para papás y mamás",       preview: "/videos/preview4.mp4", video: "/videos/video4.mp4" },
+];
 
-  // ── 1 item: portrait centrado ──────────────────────────────────────────────
-  if (items.length === 1) {
-    return (
-      <div className="relative w-72 md:w-80 mx-auto lg:mx-0">
-        {/* Shapes decorativas */}
-        <div className="absolute -top-6 -left-6 w-12 h-12 bg-yellow rounded-lg rotate-12 z-10 pointer-events-none" />
-        <div className="absolute -bottom-5 -right-5 z-10 pointer-events-none">
-          <svg width="40" height="40" viewBox="0 0 40 40">
-            <polygon points="20,2 25,15 39,15 28,24 32,37 20,29 8,37 12,24 1,15 15,15" fill="#FF6B9D" />
-          </svg>
-        </div>
-        {/* Foto */}
-        <div className="relative rounded-3xl overflow-hidden aspect-[3/4]">
-          <Slot item={items[0]} />
-        </div>
-        {/* Badges */}
-        {badges.map((b) => (
-          <div key={b.label} className={`${b.pos} ${b.bg} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-20`}>
-            {b.label}
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  // ── 2 items: portrait grande + cuadrado derecha ────────────────────────────
-  if (items.length === 2) {
-    return (
-      <div className="flex gap-3 w-full max-w-sm mx-auto lg:mx-0">
-        <div className="relative flex-[3] rounded-3xl overflow-hidden aspect-[3/4]">
-          <Slot item={items[0]} />
-          {badges.map((b) => (
-            <div key={b.label} className={`${b.pos} ${b.bg} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-20`}>
-              {b.label}
-            </div>
-          ))}
-        </div>
-        <div className="relative flex-[2] rounded-2xl overflow-hidden aspect-square self-start mt-8">
-          <Slot item={items[1]} />
-        </div>
-      </div>
-    );
-  }
-
-  // ── 3 items: bento (portrait izquierda, 2 cuadrados derecha) ──────────────
+function VideoModal({ video, onClose }: { video: VideoItem; onClose: () => void }) {
   return (
-    <div className="grid grid-cols-[3fr_2fr] grid-rows-2 gap-3 h-[420px] w-full max-w-sm mx-auto lg:mx-0">
-      {/* Item principal — ocupa toda la altura izquierda */}
-      <div className="relative row-span-2 rounded-3xl overflow-hidden">
-        <Slot item={items[0]} />
-        {badges.map((b) => (
-          <div key={b.label} className={`${b.pos} ${b.bg} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-20`}>
-            {b.label}
-          </div>
-        ))}
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-black rounded-3xl overflow-hidden shadow-2xl w-full" style={{ maxWidth: 380, aspectRatio: "9/16", maxHeight: "90vh" }}>
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors"
+          aria-label="Cerrar"
+        >
+          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <video src={video.video} className="w-full h-full object-cover" controls autoPlay playsInline />
       </div>
-      {/* Items 2 y 3 — apilados en columna derecha */}
-      {items.slice(1, 3).map((item, i) => (
-        <div key={i} className="relative rounded-2xl overflow-hidden">
-          <Slot item={item} />
-        </div>
-      ))}
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-
 export default function Specialist() {
   const [showCert, setShowCert] = useState(false);
+  const [activeVideo, setActiveVideo] = useState<VideoItem | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const isPaused = useRef(false);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const interval = setInterval(() => {
+      if (isPaused.current || !el) return;
+      const cardWidth = el.firstElementChild
+        ? (el.firstElementChild as HTMLElement).offsetWidth + 12
+        : 160;
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      if (el.scrollLeft >= maxScroll - 4) {
+        el.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        el.scrollBy({ left: cardWidth, behavior: "smooth" });
+      }
+    }, 3000);
+    const pause = () => { isPaused.current = true; };
+    const resume = () => { isPaused.current = false; };
+    el.addEventListener("touchstart", pause, { passive: true });
+    el.addEventListener("touchend", resume, { passive: true });
+    return () => {
+      clearInterval(interval);
+      el.removeEventListener("touchstart", pause);
+      el.removeEventListener("touchend", resume);
+    };
+  }, []);
 
   return (
     <section id="especialista" className="py-20 px-6 bg-white">
       <div className="mx-auto max-w-7xl">
         <div className="text-center mb-12">
           <h2 className="font-display text-4xl md:text-6xl text-foreground tracking-tight">
-            Un espacio seguro para{" "}
+            Míranos en acción —{" "}
             <br className="hidden md:block" />
-            crecer juntos
+            un espacio para crecer juntos
           </h2>
           <p className="mt-4 text-gray-500 text-lg max-w-xl mx-auto">
-            Más que terapia
+            Así trabajamos con cada familia, sesión a sesión. Más que terapia.
           </p>
         </div>
 
         <div className="flex flex-col lg:flex-row items-start gap-12">
-          {/* Columna izquierda — medios */}
-          <div className="w-full lg:flex-1 flex flex-col items-center lg:items-start gap-6">
-            <MediaGrid items={mediaItems} />
 
-            {/* Link Instagram — solo si no hay video en el grid */}
-            {!mediaItems.some((m) => m.type === "video") && (
-              <div className="w-72 md:w-80 mx-auto lg:mx-0">
-                <a
-                  href="https://www.instagram.com/to.barbaraalarconv/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group block rounded-2xl bg-foreground/5 border-2 border-dashed border-gray-200 p-5 text-center hover:border-blue hover:bg-blue/5 transition-all"
+          {/* Columna izquierda — carrusel de videos */}
+          <div className="w-full lg:flex-1">
+            {/* Grid 2×2 en desktop, scroll horizontal en mobile */}
+            <div
+              ref={scrollRef}
+              className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide lg:grid lg:grid-cols-2 lg:overflow-visible lg:pb-0"
+            >
+              {videos.map((video) => (
+                <button
+                  key={video.id}
+                  onClick={() => setActiveVideo(video)}
+                  className="group flex-shrink-0 w-40 lg:w-auto snap-center relative rounded-2xl overflow-hidden focus:outline-none bg-foreground/5"
+                  style={{ aspectRatio: "9/16" }}
+                  aria-label={`Reproducir: ${video.title}`}
                 >
-                  <div className="mx-auto w-12 h-12 rounded-full bg-blue/10 flex items-center justify-center mb-3 group-hover:bg-blue/20 transition-colors">
-                    <svg className="w-5 h-5 text-blue ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
+                  <video
+                    src={video.preview}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                  />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-12 h-12 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center text-white">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
                   </div>
-                  <p className="text-sm font-semibold text-foreground">Conóceme en Instagram</p>
-                  <p className="text-xs text-gray-500 mt-1">Mira cómo trabajo con las familias</p>
-                </a>
-              </div>
-            )}
+                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                    <p className="text-white text-xs font-semibold leading-tight text-left line-clamp-2">
+                      {video.title}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Link TikTok */}
+            <div className="mt-4 flex items-center justify-between">
+              <p className="text-sm text-gray-400">Toca un video para reproducirlo</p>
+              <a
+                href="https://www.tiktok.com/@barb.alarconv"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-foreground transition-colors"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.28 6.28 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.79 1.54V6.79a4.85 4.85 0 01-1.02-.1z" />
+                </svg>
+                Ver más en TikTok
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </a>
+            </div>
           </div>
 
           {/* Columna derecha — contenido */}
@@ -312,10 +273,7 @@ export default function Specialist() {
       {/* Modal certificado */}
       {showCert && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowCert(false)}
-          />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCert(false)} />
           <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4">
               <div>
@@ -345,6 +303,11 @@ export default function Specialist() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de video */}
+      {activeVideo && (
+        <VideoModal video={activeVideo} onClose={() => setActiveVideo(null)} />
       )}
     </section>
   );
