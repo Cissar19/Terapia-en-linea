@@ -4,18 +4,24 @@ const testimonials = [
     role: "Mamá de Sofía, 4 años",
     text: "La atención temprana cambió la vida de mi hija. El proceso de agendar online fue increíblemente simple y el pago con Webpay me dio confianza.",
     service: "Atención Temprana",
+    avatarBg: "bg-pink",
+    avatarText: "text-white",
   },
   {
     name: "Roberto A.",
     role: "Ingeniero, 38 años",
     text: "Tras mi accidente laboral, la adaptación de puesto me permitió volver a trabajar cómodo. Todo el proceso fue online, sin burocracia.",
     service: "Adaptación de Puesto",
+    avatarBg: "bg-blue",
+    avatarText: "text-white",
   },
   {
     name: "Marcela V.",
     role: "Mamá de Tomás, 2 años",
     text: "El babysitting terapéutico nos da tranquilidad. Sabemos que Tomás está con una profesional que trabaja sus objetivos mientras lo cuida.",
     service: "Babysitting Terapéutico",
+    avatarBg: "bg-orange",
+    avatarText: "text-white",
   },
 ];
 
@@ -55,10 +61,16 @@ export default function Testimonials() {
               >
                 {/* Header with avatar and info */}
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-full bg-lavender flex items-center justify-center overflow-hidden">
-                    <span className="text-sm font-bold text-blue">
+                  <div className={`relative w-10 h-10 rounded-full ${t.avatarBg} flex items-center justify-center overflow-hidden flex-shrink-0`}>
+                    <span className={`text-sm font-bold ${t.avatarText}`}>
                       {t.name.charAt(0)}
                     </span>
+                    {/* Verified checkmark */}
+                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-green border-2 border-white flex items-center justify-center">
+                      <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
                   </div>
                   <div>
                     <p className="text-sm font-bold text-foreground">{t.name}</p>

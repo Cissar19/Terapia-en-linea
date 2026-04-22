@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import BookingWidget from "@/components/booking/BookingWidget";
 
 export default function Hero() {
   return (
     <section id="hero" className="relative min-h-screen flex items-center bg-lavender overflow-hidden pt-24 pb-16">
-      {/* Floating geometric shapes — SuperHi style: large, bold, colorful */}
 
       {/* Large green triangle - top left */}
       <div className="absolute top-32 left-[4%] animate-float">
@@ -44,26 +44,22 @@ export default function Hero() {
         <div className="w-28 h-14 bg-orange rounded-t-full" />
       </div>
 
-      {/* Small blue square - mid left */}
-      <div className="absolute top-[45%] left-[28%] animate-wiggle hidden lg:block">
-        <div className="w-12 h-12 bg-blue-light rounded-lg -rotate-12" />
-      </div>
-
-      {/* Small green circle - mid right */}
-      <div className="absolute bottom-[40%] right-[28%] animate-float-slow hidden lg:block">
-        <div className="w-14 h-14 rounded-full bg-green-light border-3 border-green" />
-      </div>
-
-      {/* Content — two columns on desktop */}
+      {/* Content */}
       <div className="relative z-10 w-full px-6 max-w-7xl mx-auto">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:gap-12">
-          {/* Left column — text */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:gap-10 xl:gap-8">
+
+          {/* Left — text */}
           <div className="flex-1 text-center lg:text-left">
-            {/* Small badge/icon circle */}
             <div className="mx-auto lg:mx-0 mb-8 w-14 h-14 rounded-full bg-foreground flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
+            </div>
+
+            {/* Approach tag */}
+            <div className="mb-6 mx-auto lg:mx-0 inline-flex items-baseline flex-wrap gap-x-1.5 bg-yellow px-4 py-2 rounded-2xl text-sm text-foreground max-w-xs sm:max-w-sm lg:max-w-none">
+              <span className="font-bold shrink-0">Enfoque:</span>
+              <span className="font-medium">Considerando sus factores personales, ambiente familiar, necesidades y fortalezas</span>
             </div>
 
             <h1 className="font-display text-5xl sm:text-6xl md:text-8xl lg:text-7xl xl:text-8xl text-foreground leading-[1.05] tracking-tight">
@@ -73,13 +69,20 @@ export default function Hero() {
             </h1>
 
             <p className="mt-6 text-base md:text-lg text-gray-500 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-              Terapeuta Ocupacional especialista en neurodesarrollo infantil.
-              Acompañamos a familias de niños con TEA y alteraciones del desarrollo
-              con un proceso sencillo, sin burocracia y mucha contención humana.
+              ¿Tu hijo tiene dificultades en la alimentación, el movimiento o la adaptación
+              escolar? Hay algo que puedes hacer hoy. Acompañamos a tu familia en Santiago
+              con terapia ocupacional a domicilio, cálida y basada en evidencia.
             </p>
 
-            {/* Trust badges — desktop only under text */}
+            {/* Trust badges — desktop */}
             <div className="mt-10 hidden lg:flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-gray-400 font-medium">
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Santiago · A domicilio
+              </span>
               <span className="flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -96,19 +99,52 @@ export default function Hero() {
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
-                Profesionales certificados
+                Sin derivación médica
+              </span>
+              <span className="flex items-center gap-2 text-green font-semibold">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                1ª sesión con garantía
               </span>
             </div>
           </div>
 
-          {/* Right column — Booking Widget */}
-          <div className="mt-10 lg:mt-0 w-full lg:w-[420px] xl:w-[460px] flex-shrink-0">
+          {/* Center — Bárbara cutout (xl+ solo) */}
+          <div className="hidden xl:flex items-end flex-shrink-0 self-end -mb-16">
+            <Image
+              src="/barbara-cutout.png"
+              alt="Bárbara Alarcón Villafaña — Terapeuta Ocupacional"
+              width={260}
+              height={400}
+              className="w-[220px] 2xl:w-[260px] h-auto object-contain drop-shadow-lg"
+              priority
+            />
+          </div>
+
+          {/* Right — Booking Widget */}
+          <div className="mt-10 lg:mt-0 w-full lg:w-[420px] xl:w-[440px] flex-shrink-0">
+            {/* Urgency */}
+            <div className="mb-3 flex items-center justify-center lg:justify-start gap-2 text-xs text-green font-semibold">
+              <span className="relative flex h-2 w-2 flex-shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green" />
+              </span>
+              Agenda abierta esta semana · Sin lista de espera
+            </div>
             <BookingWidget variant="hero" />
           </div>
         </div>
 
-        {/* Trust badges — mobile only, centered below widget */}
+        {/* Trust badges — mobile */}
         <div className="mt-12 flex lg:hidden flex-wrap justify-center items-center gap-x-10 gap-y-4 text-sm text-gray-400 font-medium">
+          <span className="flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Santiago · A domicilio
+          </span>
           <span className="flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -125,7 +161,13 @@ export default function Hero() {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
-            Profesionales certificados
+            Sin derivación médica
+          </span>
+          <span className="flex items-center gap-2 text-green font-semibold">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            1ª sesión con garantía
           </span>
         </div>
       </div>

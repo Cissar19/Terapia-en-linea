@@ -33,7 +33,7 @@ export default function CalEmbed({ calLink, onBookingSuccessful }: CalEmbedProps
   return (
     <Cal
       calLink={calLink}
-      style={{ width: "100%", height: "100%", overflow: "auto" }}
+      style={{ width: "100%", height: "600px" }}
       config={{ layout: "month_view" }}
     />
   );

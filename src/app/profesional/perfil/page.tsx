@@ -1,10 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateUserProfile } from "@/lib/firebase/firestore";
+import { updateUserProfile, getProfessionalFinanceStats } from "@/lib/firebase/firestore";
+import type { ProfessionalFinanceStats } from "@/lib/firebase/firestore";
 import ProfileAvatar from "@/components/ProfileAvatar";
 import PhotoCropModal from "@/components/PhotoCropModal";
+
+function formatCLP(amount: number) {
+  return amount.toLocaleString("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
+}
 
 export default function ProfesionalPerfilPage() {
   const { user, profile, refreshProfile } = useAuth();
@@ -13,6 +18,17 @@ export default function ProfesionalPerfilPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [finance, setFinance] = useState<ProfessionalFinanceStats | null>(null);
+  const [financeLoading, setFinanceLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    setFinanceLoading(true);
+    getProfessionalFinanceStats(user.uid)
+      .then(setFinance)
+      .catch(console.error)
+      .finally(() => setFinanceLoading(false));
+  }, [user]);
 
   function handleFileSelect(file: File) {
     if (file.size > 5 * 1024 * 1024) {
@@ -59,6 +75,11 @@ export default function ProfesionalPerfilPage() {
   const phone = profile?.phone
     ? profile.phone.replace(/^\+56/, "+56 ")
     : null;
+
+  // Compute bar chart max value
+  const maxBar = finance
+    ? Math.max(...finance.monthlyRevenue.map((m) => m.earned + m.projected), 1)
+    : 1;
 
   return (
     <div>
@@ -157,6 +178,88 @@ export default function ProfesionalPerfilPage() {
             Para modificar tus datos personales, contacta al administrador.
           </p>
         </form>
+      </div>
+
+      {/* Finance stats */}
+      <div className="mt-8 max-w-2xl">
+        <h2 className="text-lg font-black text-foreground mb-4">Estadísticas financieras</h2>
+
+        {financeLoading ? (
+          <div className="bg-white rounded-2xl shadow-sm p-6 text-sm text-gray-400">
+            Cargando estadísticas...
+          </div>
+        ) : finance ? (
+          <div className="space-y-4">
+            {/* Summary cards */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white rounded-2xl shadow-sm p-5">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
+                  Ingresado este mes
+                </p>
+                <p className="text-2xl font-black text-foreground">
+                  {formatCLP(finance.currentMonthEarned)}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">sesiones completadas</p>
+              </div>
+              <div className="bg-lavender/30 rounded-2xl shadow-sm p-5">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                  Por ganar este mes
+                </p>
+                <p className="text-2xl font-black text-foreground">
+                  {formatCLP(finance.currentMonthProjected)}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">citas confirmadas pendientes</p>
+              </div>
+            </div>
+
+            {/* Bar chart — last 6 months */}
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+              <p className="text-sm font-bold text-foreground mb-5">Últimos 6 meses</p>
+              <div className="flex items-end gap-3 h-32">
+                {finance.monthlyRevenue.map((m) => {
+                  const earnedPct = ((m.earned / maxBar) * 100).toFixed(1);
+                  const projectedPct = ((m.projected / maxBar) * 100).toFixed(1);
+                  return (
+                    <div key={`${m.year}-${m.month}`} className="flex-1 flex flex-col items-center gap-1.5">
+                      <div className="w-full flex flex-col justify-end h-24 gap-0.5">
+                        {m.projected > 0 && (
+                          <div
+                            className="w-full rounded-t-lg bg-lavender/60"
+                            style={{ height: `${projectedPct}%` }}
+                            title={`Proyectado: ${formatCLP(m.projected)}`}
+                          />
+                        )}
+                        <div
+                          className="w-full bg-blue rounded-t-lg"
+                          style={{
+                            height: `${earnedPct}%`,
+                            borderRadius: m.projected > 0 ? "0" : undefined,
+                          }}
+                          title={`Ingresado: ${formatCLP(m.earned)}`}
+                        />
+                      </div>
+                      <span className="text-[10px] text-gray-400 font-medium">{m.label.split(" ")[0]}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex items-center gap-4 mt-4 text-xs text-gray-500">
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block w-3 h-3 rounded-sm bg-blue" />
+                  Ingresado
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block w-3 h-3 rounded-sm bg-lavender/60" />
+                  Proyectado
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-sm p-6 text-sm text-gray-400">
+            No se pudieron cargar las estadísticas.
+          </div>
+        )}
       </div>
 
       {cropFile && (

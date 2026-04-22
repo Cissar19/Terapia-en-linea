@@ -271,6 +271,14 @@ export async function getUserByEmail(email: string): Promise<UserProfile | null>
   return snap.empty ? null : (snap.docs[0].data() as UserProfile);
 }
 
+export async function getPatientsByProfessional(professionalId: string): Promise<UserProfile[]> {
+  const db = getFirebaseDb();
+  const snap = await getDocs(
+    query(collection(db, "users"), where("createdBy", "==", professionalId), where("role", "==", "paciente"))
+  );
+  return snap.docs.map((d) => d.data() as UserProfile);
+}
+
 export async function getAllProfessionals(): Promise<UserProfile[]> {
   const db = getFirebaseDb();
   const snap = await getDocs(
@@ -485,6 +493,29 @@ export async function updateInterventionPlan(
   });
 }
 
+// ── Mark plan objectives as achieved ──
+
+export async function markObjectivesAchieved(
+  planId: string,
+  objectiveIds: string[]
+): Promise<void> {
+  if (objectiveIds.length === 0) return;
+  const db = getFirebaseDb();
+  const planSnap = await getDoc(doc(db, "intervention_plans", planId));
+  if (!planSnap.exists()) return;
+  const plan = planSnap.data() as { objectives: { id: string; completed: boolean; completedAt?: unknown }[] };
+  const now = Timestamp.now();
+  const updatedObjectives = plan.objectives.map((obj) =>
+    objectiveIds.includes(obj.id)
+      ? { ...obj, completed: true, completedAt: now }
+      : obj
+  );
+  await updateDoc(doc(db, "intervention_plans", planId), {
+    objectives: updatedObjectives,
+    updatedAt: now,
+  });
+}
+
 // ── Cancel appointment (patient) ──
 
 export async function cancelAppointmentByPatient(id: string, userId: string): Promise<void> {
@@ -662,6 +693,99 @@ export function onActiveServices(
       callback(results);
     }
   );
+}
+
+// ── Professional Finance Stats ──
+
+export interface MonthlyRevenue {
+  month: number;
+  year: number;
+  label: string;
+  earned: number;    // completed appointments
+  projected: number; // confirmed (future) appointments
+}
+
+export interface ProfessionalFinanceStats {
+  monthlyRevenue: MonthlyRevenue[];
+  currentMonthEarned: number;
+  currentMonthProjected: number;
+  totalEarned: number; // last 6 months
+}
+
+export async function getProfessionalFinanceStats(
+  uid: string
+): Promise<ProfessionalFinanceStats> {
+  const db = getFirebaseDb();
+
+  // Build slug→price map
+  const servicesSnap = await getDocs(collection(db, "services"));
+  const servicePrices: Record<string, number> = {};
+  for (const d of servicesSnap.docs) {
+    const data = d.data();
+    servicePrices[data.slug as string] = (data.price as number) || 0;
+  }
+
+  // Get all professional's appointments (filter date client-side to avoid composite index)
+  const now = new Date();
+  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  const sixMonthsAgoMs = sixMonthsAgo.getTime();
+  const snap = await getDocs(
+    query(
+      collection(db, "appointments"),
+      where("professionalId", "==", uid)
+    )
+  );
+
+  const MONTH_NAMES = [
+    "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+    "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
+  ];
+
+  // Initialize last 6 months
+  const monthlyMap = new Map<string, MonthlyRevenue>();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    monthlyMap.set(key, {
+      month: d.getMonth() + 1,
+      year: d.getFullYear(),
+      label: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`,
+      earned: 0,
+      projected: 0,
+    });
+  }
+
+  const nowMs = now.getTime();
+
+  for (const d of snap.docs) {
+    const data = d.data();
+    const date = (data.date as Timestamp).toDate();
+    if (date.getTime() < sixMonthsAgoMs) continue;
+    const key = `${date.getFullYear()}-${date.getMonth()}`;
+    const entry = monthlyMap.get(key);
+    if (!entry) continue;
+
+    const price = servicePrices[data.serviceSlug as string] || 0;
+    const status = data.status as string;
+
+    if (status === "completed") {
+      entry.earned += price;
+    } else if (status === "confirmed" && date.getTime() > nowMs) {
+      // Future confirmed = projected
+      entry.projected += price;
+    }
+  }
+
+  const monthlyRevenue = Array.from(monthlyMap.values());
+  const currentKey = `${now.getFullYear()}-${now.getMonth()}`;
+  const current = monthlyMap.get(currentKey);
+
+  return {
+    monthlyRevenue,
+    currentMonthEarned: current?.earned ?? 0,
+    currentMonthProjected: current?.projected ?? 0,
+    totalEarned: monthlyRevenue.reduce((sum, m) => sum + m.earned, 0),
+  };
 }
 
 // ── Task Templates ──

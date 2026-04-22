@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   getUserProfile,
-  getAppointmentsByPatient,
-  getNotesByPatient,
-  getTasksByPatient,
-  getInterventionPlansByPatient,
+  getAppointmentsByProfessional,
+  getNotesByProfessional,
+  getTasksByProfessional,
+  getInterventionPlansByProfessional,
 } from "@/lib/firebase/firestore";
 import type {
   UserProfile,
@@ -28,7 +28,9 @@ import TabTareas from "@/components/profesional/paciente-detail/TabTareas";
 
 export default function PatientDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const patientId = params.id as string;
+  const nameFromUrl = searchParams.get("name") ?? "";
   const { user, profile: myProfile } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -40,25 +42,26 @@ export default function PatientDetailPage() {
   const [tasks, setTasks] = useState<PatientTask[]>([]);
   const [plans, setPlans] = useState<InterventionPlan[]>([]);
 
-  // Derived: patient name/email from profile or first appointment
-  const patientName = patientProfile?.displayName || appointments[0]?.userName || "Paciente";
+  // Derived: patient name/email — URL param is the most reliable source when coming from the modal
+  const patientName = patientProfile?.displayName || appointments[0]?.userName || nameFromUrl || "Paciente";
   const patientEmail = patientProfile?.email || appointments[0]?.userEmail || "";
 
   useEffect(() => {
     if (!user || !patientId) return;
     Promise.all([
       getUserProfile(patientId),
-      getAppointmentsByPatient(patientId),
-      getNotesByPatient(patientId),
-      getTasksByPatient(patientId),
-      getInterventionPlansByPatient(patientId),
+      getAppointmentsByProfessional(user.uid),
+      getNotesByProfessional(user.uid),
+      getTasksByProfessional(user.uid),
+      getInterventionPlansByProfessional(user.uid),
     ])
       .then(([profile, appts, n, t, p]) => {
         setPatientProfile(profile);
-        setAppointments(appts);
-        setNotes(n);
-        setTasks(t);
-        setPlans(p);
+        // Filter all data to only this patient's records
+        setAppointments(appts.filter((a) => a.userId === patientId));
+        setNotes(n.filter((note) => note.patientId === patientId));
+        setTasks(t.filter((task) => task.patientId === patientId));
+        setPlans(p.filter((plan) => plan.patientId === patientId));
       })
       .finally(() => setLoading(false));
   }, [user, patientId]);

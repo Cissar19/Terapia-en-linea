@@ -8,13 +8,13 @@ import AuthButtons from "@/components/auth/AuthButtons";
 import UserMenu from "@/components/auth/UserMenu";
 
 const links = [
+  { label: "Especialista", href: "/#especialista" },
   { label: "Servicios", href: "/#servicios" },
-  { label: "Cómo Funciona", href: "/#como-funciona" },
-  { label: "Privacidad", href: "/#privacidad" },
-  { label: "Contacto", href: "/#contacto" },
+  { label: "Cómo funciona", href: "/#como-funciona" },
+  { label: "Preguntas", href: "/#preguntas" },
 ];
 
-const tickerText = "AGENDA TU HORA ONLINE  ·  PAGO SEGURO CON WEBPAY  ·  CONFIRMACIÓN INSTANTÁNEA  ·  PROFESIONALES CERTIFICADOS  ·  ";
+const tickerText = "AGENDA TU HORA ONLINE  ·  SANTIAGO · A DOMICILIO  ·  PAGO SEGURO CON WEBPAY  ·  GARANTÍA 1ª SESIÓN  ·  SIN DERIVACIÓN MÉDICA  ·  SIN LISTA DE ESPERA  ·  CONFIRMACIÓN INSTANTÁNEA  ·  ";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -58,9 +58,21 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Auth area (desktop) */}
+          {/* Auth area + CTA (desktop) */}
           <div className="hidden md:flex items-center gap-3">
-            {user ? <UserMenu /> : <AuthButtons />}
+            {user ? (
+              <UserMenu />
+            ) : (
+              <>
+                <AuthButtons />
+                <a
+                  href="/#servicios"
+                  className="rounded-full bg-foreground px-5 py-2.5 text-sm font-semibold text-white hover:bg-foreground/90 transition-colors"
+                >
+                  Agendar hora
+                </a>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -98,19 +110,19 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="mt-3 pt-3 border-t border-gray-100 flex flex-col gap-2">
+                <a
+                  href="/#servicios"
+                  onClick={() => setOpen(false)}
+                  className="block text-center rounded-full bg-foreground px-6 py-2.5 text-sm font-semibold text-white"
+                >
+                  Agendar hora
+                </a>
                 <Link
                   href="/login"
                   onClick={() => setOpen(false)}
                   className="block text-center text-sm font-medium text-foreground hover:text-blue py-2"
                 >
-                  Iniciar Sesión
-                </Link>
-                <Link
-                  href="/registro"
-                  onClick={() => setOpen(false)}
-                  className="block text-center rounded-full bg-foreground px-6 py-2.5 text-sm font-semibold text-white"
-                >
-                  Registrarme
+                  Iniciar sesión
                 </Link>
               </div>
             )}

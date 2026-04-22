@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Green circle (top-left) -->
+  <circle cx="27" cy="27" r="20" fill="#2DC653"/>
+  <!-- Blue teardrop/triangle (top-right) -->
+  <path d="M73 10 C85 10 90 18 90 27 C90 36 85 44 73 44 C61 44 56 36 56 27 C56 18 61 10 73 10Z" fill="#4895EF"/>
+  <!-- Orange diamond (bottom-left) -->
+  <rect x="10" y="58" width="34" height="34" rx="8" ry="8" transform="rotate(45 27 75)" fill="#F4A226"/>
+  <!-- Red rounded square (bottom-right) -->
+  <rect x="56" y="58" width="34" height="34" rx="10" fill="#E85D3A"/>
+</svg>

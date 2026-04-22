@@ -354,7 +354,7 @@ export default function BookingModal({ service, onClose, initialProfessional, in
                             </div>
 
                             {calLink ? (
-                                <div className="min-h-[480px]">
+                                <div className="min-h-[600px]">
                                     <CalEmbed
                                         calLink={calLink}
                                         onBookingSuccessful={() => setStep("success")}

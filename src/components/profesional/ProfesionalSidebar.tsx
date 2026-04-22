@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileAvatar from "@/components/ProfileAvatar";
 import { useProfessionalTasks } from "@/hooks/useTasks";
+import CreatePatientModal from "./CreatePatientModal";
 
 const navItems = [
   {
@@ -91,10 +93,18 @@ export default function ProfesionalSidebar({ open, onClose }: Props) {
   const { user, profile } = useAuth();
   const { data: tasks } = useProfessionalTasks(user?.uid);
   const pendingTaskCount = tasks.filter((t) => !t.completed).length;
+  const [showCreatePatient, setShowCreatePatient] = useState(false);
 
   const firstName = profile?.displayName?.split(" ")[0] || "Profesional";
 
   return (
+    <>
+    {showCreatePatient && (
+      <CreatePatientModal
+        onClose={() => setShowCreatePatient(false)}
+        onCreated={() => setShowCreatePatient(false)}
+      />
+    )}
     <aside
       className={`
         fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col
@@ -125,7 +135,7 @@ export default function ProfesionalSidebar({ open, onClose }: Props) {
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const active =
             item.href === "/profesional"
@@ -151,6 +161,20 @@ export default function ProfesionalSidebar({ open, onClose }: Props) {
             </Link>
           );
         })}
+
+        <div className="pt-2 border-t border-gray-100 mt-2">
+          <button
+            onClick={() => setShowCreatePatient(true)}
+            className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-green hover:bg-green/10 transition-colors"
+          >
+            <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-green text-green flex-shrink-0">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </span>
+            Crear Paciente
+          </button>
+        </div>
       </nav>
 
       <div className="p-4 border-t border-gray-100">
@@ -166,5 +190,6 @@ export default function ProfesionalSidebar({ open, onClose }: Props) {
         </Link>
       </div>
     </aside>
+    </>
   );
 }

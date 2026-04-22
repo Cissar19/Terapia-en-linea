@@ -4,6 +4,21 @@ import { useState } from "react";
 
 const faqs = [
   {
+    question: "¿En qué se diferencia la terapia ocupacional de un psicólogo o fonoaudiólogo?",
+    answer:
+      "La terapia ocupacional se enfoca en las actividades del día a día: comer, vestirse, escribir, jugar, adaptarse al entorno. El psicólogo trabaja las emociones y conducta; el fonoaudiólogo, el lenguaje. Muchas veces trabajamos en equipo, pero si el problema principal es funcional —coordinación, alimentación, integración sensorial, adaptación escolar— la TO es el punto de partida correcto.",
+  },
+  {
+    question: "¿Hasta qué comunas de Santiago atienden a domicilio?",
+    answer:
+      "Atiendo en gran parte de Santiago. Las comunas más frecuentes son Providencia, Las Condes, Vitacura, Ñuñoa, La Reina, Peñalolén, Macul, San Miguel y alrededores. Si tu comuna no aparece, escríbeme por WhatsApp y vemos cómo coordinamos — generalmente hay solución.",
+  },
+  {
+    question: "¿Qué pasa si en la primera sesión no me convence?",
+    answer:
+      "Te devuelvo el 100% del valor — sin preguntas, sin trámites. Es una garantía real porque confío en lo que hago y quiero que tú también confíes desde el primer día. No existe ningún riesgo en probar.",
+  },
+  {
     question: "¿Necesito una derivación médica para agendar?",
     answer:
       "No. Puedes agendar directamente desde la web sin necesidad de una orden médica. Si tu Isapre o Fonasa requiere derivación para reembolso, te puedo orientar en la primera sesión.",
@@ -39,7 +54,7 @@ export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section className="py-28 px-6 bg-lavender-light">
+    <section id="preguntas" className="py-28 px-6 bg-lavender-light">
       <div className="mx-auto max-w-3xl">
         <div className="text-center mb-16">
           <span className="inline-block bg-white rounded-full px-5 py-2 text-sm font-semibold text-blue mb-6">

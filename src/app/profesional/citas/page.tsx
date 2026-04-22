@@ -7,12 +7,15 @@ import {
   updateAppointmentStatus,
   addClinicalNote,
   getActivePlanForPatient,
+  markObjectivesAchieved,
 } from "@/lib/firebase/firestore";
 import { useProfessionalAppointments } from "@/hooks/useAppointments";
 import type { Appointment, InterventionPlan } from "@/lib/firebase/types";
 import { useServices } from "@/contexts/ServicesContext";
 import { formatCLP, formatDuration } from "@/lib/format";
 import DailyTimeline from "@/components/profesional/DailyTimeline";
+import StartSessionModal from "@/components/profesional/StartSessionModal";
+import type { SessionObjectives } from "@/components/profesional/StartSessionModal";
 import CompletionModal from "@/components/profesional/CompletionModal";
 import { usePagination } from "@/hooks/usePagination";
 import Pagination from "@/components/Pagination";
@@ -34,12 +37,65 @@ function isSameDay(a: Date, b: Date) {
 export default function CitasProfesionalPage() {
   const { user } = useAuth();
   const { data: appointments, loading } = useProfessionalAppointments(user?.uid);
+  const { getBySlug } = useServices();
+
+  // Two-step session flow state
+  const [startingId, setStartingId] = useState<string | null>(null);
+  const [startingPlan, setStartingPlan] = useState<InterventionPlan | null>(null);
+  const [inProgressIds, setInProgressIds] = useState<Set<string>>(new Set());
+  const [sessionObjectivesMap, setSessionObjectivesMap] = useState<Map<string, SessionObjectives>>(new Map());
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [completingPlan, setCompletingPlan] = useState<InterventionPlan | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
   const [view, setView] = useState<"list" | "cards" | "timeline">("list");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [planBanner, setPlanBanner] = useState<{ patientId: string; patientName: string } | null>(null);
+
+  // ── Start session ──
+
+  async function openStartModal(appointmentId: string) {
+    const apt = appointments.find((a) => a.id === appointmentId);
+    if (!apt) return;
+    setStartingId(appointmentId);
+    try {
+      const plan = await getActivePlanForPatient(apt.userId);
+      setStartingPlan(plan);
+    } catch {
+      setStartingPlan(null);
+    }
+  }
+
+  async function handleStartSession(noteContent: string, objectives: SessionObjectives) {
+    if (!user || !startingId) return;
+    const apt = appointments.find((a) => a.id === startingId);
+    if (!apt) return;
+    setSubmitting(true);
+    try {
+      if (noteContent.trim()) {
+        await addClinicalNote({
+          appointmentId: apt.id,
+          professionalId: user.uid,
+          patientId: apt.userId,
+          patientName: apt.userName,
+          content: noteContent.trim(),
+          type: "sesion",
+        });
+      }
+      setInProgressIds((prev) => new Set(prev).add(startingId));
+      setSessionObjectivesMap((prev) => {
+        const next = new Map(prev);
+        next.set(startingId, objectives);
+        return next;
+      });
+    } finally {
+      setStartingId(null);
+      setStartingPlan(null);
+      setSubmitting(false);
+    }
+  }
+
+  // ── Complete session ──
 
   async function openCompletionModal(appointmentId: string) {
     const apt = appointments.find((a) => a.id === appointmentId);
@@ -53,32 +109,55 @@ export default function CitasProfesionalPage() {
     }
   }
 
-  async function handleComplete(appointment: Appointment, noteContent: string) {
+  async function handleComplete(
+    appointment: Appointment,
+    noteContent: string,
+    achievedObjectiveIds: string[]
+  ) {
     if (!user) return;
     setSubmitting(true);
-    await updateAppointmentStatus(appointment.id, "completed");
+    try {
+      await updateAppointmentStatus(appointment.id, "completed");
 
-    if (noteContent.trim()) {
-      await addClinicalNote({
-        appointmentId: appointment.id,
-        professionalId: user.uid,
-        patientId: appointment.userId,
-        patientName: appointment.userName,
-        content: noteContent.trim(),
+      if (noteContent.trim()) {
+        await addClinicalNote({
+          appointmentId: appointment.id,
+          professionalId: user.uid,
+          patientId: appointment.userId,
+          patientName: appointment.userName,
+          content: noteContent.trim(),
+          type: "sesion",
+        });
+      }
+
+      if (achievedObjectiveIds.length > 0 && completingPlan) {
+        await markObjectivesAchieved(completingPlan.id, achievedObjectiveIds);
+      }
+
+      // Remove from in-progress
+      setInProgressIds((prev) => {
+        const next = new Set(prev);
+        next.delete(appointment.id);
+        return next;
       });
-    }
+      setSessionObjectivesMap((prev) => {
+        const next = new Map(prev);
+        next.delete(appointment.id);
+        return next;
+      });
 
-    // Check if this is the first completed session and the patient has no plan
-    const patientCompletedCount = appointments.filter(
-      (a) => a.userId === appointment.userId && a.status === "completed"
-    ).length;
-    if (patientCompletedCount === 0 && !completingPlan) {
-      setPlanBanner({ patientId: appointment.userId, patientName: appointment.userName });
+      // Suggest plan if first session and no plan
+      const patientCompletedCount = appointments.filter(
+        (a) => a.userId === appointment.userId && a.status === "completed"
+      ).length;
+      if (patientCompletedCount === 0 && !completingPlan) {
+        setPlanBanner({ patientId: appointment.userId, patientName: appointment.userName });
+      }
+    } finally {
+      setCompletingId(null);
+      setCompletingPlan(null);
+      setSubmitting(false);
     }
-
-    setCompletingId(null);
-    setCompletingPlan(null);
-    setSubmitting(false);
   }
 
   const confirmed = appointments.filter((a) => a.status === "confirmed");
@@ -108,7 +187,11 @@ export default function CitasProfesionalPage() {
   });
 
   function handleTimelineComplete(appointment: Appointment) {
-    openCompletionModal(appointment.id);
+    if (inProgressIds.has(appointment.id)) {
+      openCompletionModal(appointment.id);
+    } else {
+      openStartModal(appointment.id);
+    }
   }
 
   function shiftDate(days: number) {
@@ -119,18 +202,35 @@ export default function CitasProfesionalPage() {
     });
   }
 
+  const startingAppointment = startingId
+    ? appointments.find((a) => a.id === startingId) ?? null
+    : null;
   const completingAppointment = completingId
     ? appointments.find((a) => a.id === completingId) ?? null
     : null;
 
   return (
     <div>
+      {/* Start Session Modal */}
+      {startingAppointment && (
+        <StartSessionModal
+          appointment={startingAppointment}
+          patientPlan={startingPlan}
+          onConfirm={handleStartSession}
+          onClose={() => { setStartingId(null); setStartingPlan(null); }}
+          submitting={submitting}
+        />
+      )}
+
       {/* Completion Modal */}
       {completingAppointment && (
         <CompletionModal
           appointment={completingAppointment}
           patientPlan={completingPlan}
-          onConfirm={(noteContent) => handleComplete(completingAppointment, noteContent)}
+          sessionObjectives={completingId ? sessionObjectivesMap.get(completingId) ?? null : null}
+          onConfirm={(noteContent, achievedIds) =>
+            handleComplete(completingAppointment, noteContent, achievedIds)
+          }
           onClose={() => { setCompletingId(null); setCompletingPlan(null); }}
           submitting={submitting}
         />
@@ -173,33 +273,19 @@ export default function CitasProfesionalPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <h1 className="text-4xl font-black text-foreground">Mis Citas</h1>
         <div className="flex items-center gap-1 bg-gray-100 rounded-full p-1">
-          <button
-            onClick={() => setView("list")}
-            className={`px-4 py-1.5 rounded-full text-base font-semibold transition-colors ${view === "list"
-                ? "bg-white text-foreground shadow-sm"
-                : "text-gray-500 hover:text-foreground"
+          {(["list", "cards", "timeline"] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={`px-4 py-1.5 rounded-full text-base font-semibold transition-colors ${
+                view === v
+                  ? "bg-white text-foreground shadow-sm"
+                  : "text-gray-500 hover:text-foreground"
               }`}
-          >
-            Lista
-          </button>
-          <button
-            onClick={() => setView("cards")}
-            className={`px-4 py-1.5 rounded-full text-base font-semibold transition-colors ${view === "cards"
-                ? "bg-white text-foreground shadow-sm"
-                : "text-gray-500 hover:text-foreground"
-              }`}
-          >
-            Cards
-          </button>
-          <button
-            onClick={() => setView("timeline")}
-            className={`px-4 py-1.5 rounded-full text-base font-semibold transition-colors ${view === "timeline"
-                ? "bg-white text-foreground shadow-sm"
-                : "text-gray-500 hover:text-foreground"
-              }`}
-          >
-            Línea de Tiempo
-          </button>
+            >
+              {v === "list" ? "Lista" : v === "cards" ? "Cards" : "Línea de Tiempo"}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -245,7 +331,7 @@ export default function CitasProfesionalPage() {
         />
       )}
 
-      {/* Cards view — grouped by week then day */}
+      {/* Cards view */}
       {view === "cards" && (() => {
         const getWeekStart = (d: Date) => {
           const day = d.getDay();
@@ -279,12 +365,10 @@ export default function CitasProfesionalPage() {
           return dateStr;
         };
 
-        // Sort all appointments chronologically
         const sorted = [...appointments].sort(
           (a, b) => a.date.toDate().getTime() - b.date.toDate().getTime()
         );
 
-        // Group by day key
         const byDay = new Map<string, { date: Date; items: Appointment[] }>();
         for (const a of sorted) {
           const d = a.date.toDate();
@@ -293,7 +377,6 @@ export default function CitasProfesionalPage() {
           byDay.get(key)!.items.push(a);
         }
 
-        // Group days by week
         const byWeek = new Map<number, { weekStart: Date; days: { date: Date; items: Appointment[] }[] }>();
         for (const { date, items } of byDay.values()) {
           const ws = getWeekStart(date);
@@ -316,32 +399,31 @@ export default function CitasProfesionalPage() {
           <div className="space-y-8">
             {weeks.map(({ weekStart, days }) => (
               <div key={weekStart.getTime()}>
-                {/* Week header */}
                 <div className="flex items-center gap-3 mb-5">
                   <span className="text-base font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                     {getWeekLabel(weekStart)}
                   </span>
                   <div className="flex-1 h-px bg-gray-100" />
                 </div>
-
                 <div className="space-y-6">
                   {days.map(({ date, items }) => (
                     <div key={date.getTime()}>
-                      {/* Day header */}
                       <p className="text-lg font-semibold text-foreground mb-3 capitalize">
                         {getDayLabel(date)}
                       </p>
-
-                      {/* Cards */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {items.map((a) => {
                           const isConfirmed = a.status === "confirmed";
                           const isCompleted = a.status === "completed";
+                          const inProgress = inProgressIds.has(a.id);
+                          const svc = getBySlug(a.serviceSlug);
                           return (
                             <div
                               key={a.id}
                               className={`bg-white rounded-2xl shadow-sm border p-5 hover:shadow-md transition-shadow ${
-                                isConfirmed
+                                inProgress
+                                  ? "border-orange/30"
+                                  : isConfirmed
                                   ? "border-green/15"
                                   : isCompleted
                                   ? "border-blue/10"
@@ -350,11 +432,17 @@ export default function CitasProfesionalPage() {
                             >
                               <div className="flex items-start justify-between mb-3">
                                 <span className={`flex h-10 w-10 items-center justify-center rounded-full text-lg font-black ${
-                                  isConfirmed ? "bg-green/10 text-green" : isCompleted ? "bg-blue/10 text-blue" : "bg-red/10 text-red"
+                                  inProgress ? "bg-orange/10 text-orange" : isConfirmed ? "bg-green/10 text-green" : isCompleted ? "bg-blue/10 text-blue" : "bg-red/10 text-red"
                                 }`}>
                                   {a.userName[0]?.toUpperCase() || "P"}
                                 </span>
-                                {isConfirmed && (
+                                {inProgress && (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-orange/10 px-2.5 py-0.5 text-sm font-semibold text-orange">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-orange animate-pulse" />
+                                    En curso
+                                  </span>
+                                )}
+                                {!inProgress && isConfirmed && (
                                   <span className="inline-flex items-center gap-1 rounded-full bg-green/10 px-2.5 py-0.5 text-sm font-semibold text-green">
                                     <span className="h-1.5 w-1.5 rounded-full bg-green animate-pulse-soft" />
                                     Confirmada
@@ -375,19 +463,34 @@ export default function CitasProfesionalPage() {
                                 )}
                               </div>
                               <p className="text-lg font-bold text-foreground mb-0.5">{a.userName}</p>
-                              <p className="text-base text-gray-500 mb-3">{a.serviceName}</p>
+                              <p className="text-base text-gray-500 mb-1">{a.serviceName}</p>
+                              {svc && (
+                                <div className="flex items-center gap-2 mb-3">
+                                  <span className="inline-flex items-center gap-1 rounded-lg bg-gray-50 px-2 py-0.5 text-xs text-gray-500">
+                                    {formatDuration(svc.duration)}
+                                  </span>
+                                  <span className={`text-sm font-bold ${isCompleted ? "text-blue" : "text-green"}`}>
+                                    {formatCLP(svc.price)}
+                                  </span>
+                                </div>
+                              )}
                               <div className="flex items-center gap-1.5 text-base text-gray-400 mb-4">
-                                <svg className="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
                                 {a.date.toDate().toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", timeZone: "America/Santiago" })}
                               </div>
-                              {isConfirmed && (
+                              {isConfirmed && !inProgress && (
+                                <button
+                                  onClick={() => openStartModal(a.id)}
+                                  className="w-full rounded-xl bg-green/10 py-2 text-base font-semibold text-green hover:bg-green/20 transition-colors"
+                                >
+                                  ▶ Iniciar Cita
+                                </button>
+                              )}
+                              {isConfirmed && inProgress && (
                                 <button
                                   onClick={() => openCompletionModal(a.id)}
                                   className="w-full rounded-xl bg-blue/10 py-2 text-base font-semibold text-blue hover:bg-blue/20 transition-colors"
                                 >
-                                  Completar sesión
+                                  ■ Finalizar Cita
                                 </button>
                               )}
                             </div>
@@ -416,35 +519,73 @@ export default function CitasProfesionalPage() {
               <p className="px-6 py-8 text-center text-lg text-gray-400">No hay citas confirmadas.</p>
             ) : (
               <div>
-                {confirmed.map((a) => (
-                  <div key={a.id} className="flex items-center justify-between px-6 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-green/10 text-green text-base font-bold">
-                        {a.userName[0]?.toUpperCase() || "P"}
-                      </span>
-                      <div>
-                        <p className="text-lg font-medium text-foreground">{a.userName}</p>
-                        <p className="text-base text-gray-500">{a.serviceName}</p>
+                {confirmed.map((a) => {
+                  const svc = getBySlug(a.serviceSlug);
+                  const inProgress = inProgressIds.has(a.id);
+                  return (
+                    <div
+                      key={a.id}
+                      className={`flex items-center justify-between px-6 py-4 border-b border-gray-50 last:border-0 transition-colors ${
+                        inProgress ? "bg-orange/5" : "hover:bg-gray-50/50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-bold ${
+                          inProgress ? "bg-orange/10 text-orange" : "bg-green/10 text-green"
+                        }`}>
+                          {a.userName[0]?.toUpperCase() || "P"}
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-lg font-medium text-foreground">{a.userName}</p>
+                            {inProgress && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-orange/10 px-2 py-0.5 text-xs font-semibold text-orange">
+                                <span className="h-1.5 w-1.5 rounded-full bg-orange animate-pulse" />
+                                En curso
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-base text-gray-500">{a.serviceName}</p>
+                            {svc && (
+                              <>
+                                <span className="text-gray-200">·</span>
+                                <span className="text-sm text-gray-400">{formatDuration(svc.duration)}</span>
+                                <span className="text-gray-200">·</span>
+                                <span className="text-sm font-semibold text-green">{formatCLP(svc.price)}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className="text-lg font-medium text-foreground">
+                            {a.date.toDate().toLocaleDateString("es-CL", { day: "numeric", month: "short" })}
+                          </p>
+                          <p className="text-base text-gray-400">
+                            {a.date.toDate().toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                        {!inProgress ? (
+                          <button
+                            onClick={() => openStartModal(a.id)}
+                            className="rounded-lg bg-green/10 px-3 py-1.5 text-base font-semibold text-green hover:bg-green/20 transition-colors whitespace-nowrap"
+                          >
+                            ▶ Iniciar
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => openCompletionModal(a.id)}
+                            className="rounded-lg bg-blue/10 px-3 py-1.5 text-base font-semibold text-blue hover:bg-blue/20 transition-colors whitespace-nowrap"
+                          >
+                            ■ Finalizar
+                          </button>
+                        )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-lg font-medium text-foreground">
-                          {a.date.toDate().toLocaleDateString("es-CL", { day: "numeric", month: "short" })}
-                        </p>
-                        <p className="text-base text-gray-400">
-                          {a.date.toDate().toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => openCompletionModal(a.id)}
-                        className="rounded-lg bg-blue/10 px-3 py-1.5 text-base font-medium text-blue hover:bg-blue/20 transition-colors"
-                      >
-                        Completar
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -459,27 +600,40 @@ export default function CitasProfesionalPage() {
               <p className="px-6 py-8 text-center text-lg text-gray-400">No hay citas completadas.</p>
             ) : (
               <div>
-                {completedPag.items.map((a) => (
-                  <div key={a.id} className="flex items-center justify-between px-6 py-4 border-b border-gray-50 last:border-0">
-                    <div className="flex items-center gap-4">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue/10 text-blue text-base font-bold">
-                        {a.userName[0]?.toUpperCase() || "P"}
-                      </span>
-                      <div>
-                        <p className="text-lg font-medium text-foreground">{a.userName}</p>
-                        <p className="text-base text-gray-500">{a.serviceName}</p>
+                {completedPag.items.map((a) => {
+                  const svc = getBySlug(a.serviceSlug);
+                  return (
+                    <div key={a.id} className="flex items-center justify-between px-6 py-4 border-b border-gray-50 last:border-0">
+                      <div className="flex items-center gap-4">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue/10 text-blue text-base font-bold">
+                          {a.userName[0]?.toUpperCase() || "P"}
+                        </span>
+                        <div>
+                          <p className="text-lg font-medium text-foreground">{a.userName}</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-base text-gray-500">{a.serviceName}</p>
+                            {svc && (
+                              <>
+                                <span className="text-gray-200">·</span>
+                                <span className="text-sm text-gray-400">{formatDuration(svc.duration)}</span>
+                                <span className="text-gray-200">·</span>
+                                <span className="text-sm font-semibold text-blue">{formatCLP(svc.price)}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg text-gray-600">
+                          {a.date.toDate().toLocaleDateString("es-CL")}
+                        </p>
+                        <span className="inline-flex items-center rounded-full bg-blue/10 px-2 py-0.5 text-sm font-semibold text-blue">
+                          Completada
+                        </span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-lg text-gray-600">
-                        {a.date.toDate().toLocaleDateString("es-CL")}
-                      </p>
-                      <span className="inline-flex items-center rounded-full bg-blue/10 px-2 py-0.5 text-sm font-semibold text-blue">
-                        Completada
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <div className="px-6 pb-4">
                   <Pagination
                     page={completedPag.page}
@@ -504,27 +658,38 @@ export default function CitasProfesionalPage() {
                 <span className="text-base text-gray-400">{cancelledAll.length}</span>
               </div>
               <div>
-                {cancelledPag.items.map((a) => (
-                  <div key={a.id} className="flex items-center justify-between px-6 py-4 border-b border-gray-50 last:border-0 opacity-60">
-                    <div className="flex items-center gap-4">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-red/10 text-red text-base font-bold">
-                        {a.userName[0]?.toUpperCase() || "P"}
-                      </span>
-                      <div>
-                        <p className="text-lg font-medium text-foreground">{a.userName}</p>
-                        <p className="text-base text-gray-500">{a.serviceName}</p>
+                {cancelledPag.items.map((a) => {
+                  const svc = getBySlug(a.serviceSlug);
+                  return (
+                    <div key={a.id} className="flex items-center justify-between px-6 py-4 border-b border-gray-50 last:border-0 opacity-60">
+                      <div className="flex items-center gap-4">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-red/10 text-red text-base font-bold">
+                          {a.userName[0]?.toUpperCase() || "P"}
+                        </span>
+                        <div>
+                          <p className="text-lg font-medium text-foreground">{a.userName}</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-base text-gray-500">{a.serviceName}</p>
+                            {svc && (
+                              <>
+                                <span className="text-gray-200">·</span>
+                                <span className="text-sm text-gray-400">{formatDuration(svc.duration)}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg text-gray-600">
+                          {a.date.toDate().toLocaleDateString("es-CL")}
+                        </p>
+                        <span className="inline-flex items-center rounded-full bg-red/10 px-2 py-0.5 text-sm font-semibold text-red">
+                          Cancelada
+                        </span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-lg text-gray-600">
-                        {a.date.toDate().toLocaleDateString("es-CL")}
-                      </p>
-                      <span className="inline-flex items-center rounded-full bg-red/10 px-2 py-0.5 text-sm font-semibold text-red">
-                        Cancelada
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <div className="px-6 pb-4">
                   <Pagination
                     page={cancelledPag.page}

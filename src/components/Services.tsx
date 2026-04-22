@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toService, type Service } from "@/lib/services";
 import { useServices } from "@/contexts/ServicesContext";
+import { getAllProfessionals } from "@/lib/firebase/firestore";
+import type { UserProfile } from "@/lib/firebase/types";
 import BookingModal from "@/components/booking/BookingModal";
 
 const cardStyles = [
@@ -27,15 +29,12 @@ const cardStyles = [
 ];
 
 const icons = [
-  // Laptop/desk icon
   <svg key="desk" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
   </svg>,
-  // Heart icon
   <svg key="heart" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
   </svg>,
-  // Sun icon
   <svg key="sun" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
   </svg>,
@@ -45,6 +44,14 @@ export default function Services() {
   const { services: docs, loading } = useServices();
   const services = useMemo(() => docs.map((d) => toService(d)), [docs]);
   const [activeService, setActiveService] = useState<Service | null>(null);
+  const [professional, setProfessional] = useState<UserProfile | null>(null);
+
+  // Carga el profesional al montar para saltar directo al calendario
+  useEffect(() => {
+    getAllProfessionals()
+      .then((pros) => { if (pros.length >= 1) setProfessional(pros[0]); })
+      .catch(console.error);
+  }, []);
 
   if (loading || services.length === 0) return null;
 
@@ -70,7 +77,6 @@ export default function Services() {
             </div>
           </div>
 
-          {/* Stacked colored cards */}
           <div className="space-y-6">
             {services.map((service, i) => {
               const style = cardStyles[i];
@@ -80,9 +86,7 @@ export default function Services() {
                   className={`rounded-3xl ${style.bg} p-8 md:p-12 hover:scale-[1.005] transition-transform duration-300`}
                 >
                   <div className="flex flex-col md:flex-row md:items-center gap-8">
-                    {/* Left content */}
                     <div className="flex-1">
-                      {/* Small icon badge */}
                       <div className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl ${style.iconBg} ${style.textColor} mb-6`}>
                         {icons[i]}
                       </div>
@@ -94,7 +98,6 @@ export default function Services() {
                         {service.description}
                       </p>
 
-                      {/* Features */}
                       <ul className="mt-6 space-y-2">
                         {service.features.map((feat) => (
                           <li key={feat} className={`flex items-center gap-2 text-sm ${style.textColor}`}>
@@ -106,27 +109,27 @@ export default function Services() {
                         ))}
                       </ul>
 
-                      {/* Price */}
                       <div className="mt-6 flex items-baseline gap-2">
                         <span className={`text-3xl font-bold ${style.textColor}`}>{service.price}</span>
                         <span className={`text-sm ${style.descColor}`}>/ {service.duration}</span>
                       </div>
                     </div>
 
-                    {/* Right CTA */}
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 flex flex-col items-start md:items-center gap-3">
                       <button
                         onClick={() => setActiveService(service)}
-                        className={`inline-flex items-center gap-2 rounded-full px-8 py-4 font-semibold text-base transition-all hover:scale-105 ${i === 2
-                            ? "bg-foreground text-white"
-                            : "bg-white text-foreground"
-                          }`}
+                        className={`inline-flex items-center gap-2 rounded-full px-8 py-4 font-semibold text-base transition-all hover:scale-105 ${
+                          i === 2 ? "bg-foreground text-white" : "bg-white text-foreground"
+                        }`}
                       >
-                        Agendar Cita
+                        Elegir horario
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                       </button>
+                      <span className={`text-xs ${style.descColor} opacity-80`}>
+                        Cancela hasta 24h antes · Sin contratos
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -136,11 +139,12 @@ export default function Services() {
         </div>
       </section>
 
-      {/* Booking Modal */}
       {activeService && (
         <BookingModal
           service={activeService}
           onClose={() => setActiveService(null)}
+          initialProfessional={professional}
+          initialStep={professional?.calUsername ? "calendar" : "professional"}
         />
       )}
     </>
